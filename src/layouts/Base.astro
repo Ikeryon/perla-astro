@@ -7,6 +7,36 @@ const { title = 'La Perla dei Sibillini', description = 'Visso e i Monti Sibilli
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#5A1F1B" />
+
+  <!-- Google Consent Mode v2 — default: DENIED (GDPR). Deve stare PRIMA di CookieYes e GA. -->
+  <script is:inline>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('consent', 'default', {
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+      functionality_storage: 'denied',
+      personalization_storage: 'denied',
+      security_storage: 'granted',
+      wait_for_update: 2000
+    });
+    gtag('set', 'ads_data_redaction', true);
+    gtag('set', 'url_passthrough', true);
+  </script>
+
+  <!-- CookieYes — banner consensi. Con "Support GCM" attivo aggiorna da solo il Consent Mode. -->
+  <script is:inline id="cookieyes" type="text/javascript"
+          src="https://cdn-cookieyes.com/client_data/07c3e759432a2a0a7e29928bf9ddd2f5/script.js"></script>
+
+  <!-- Google Analytics 4 -->
+  <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-S1JKP1BZF4"></script>
+  <script is:inline>
+    gtag('js', new Date());
+    gtag('config', 'G-S1JKP1BZF4');
+  </script>
+
   <title>{title}</title>
   <meta name="description" content={description} />
   <meta property="og:type" content="website" />

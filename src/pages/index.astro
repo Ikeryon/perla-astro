@@ -9,11 +9,13 @@ const preview = programme.slice(0, 3);
 
 function dateRange(ed) {
   if (!ed?.start_date) return '';
-  const mesi = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+  // Formattazione stabile sul fuso italiano (evita lo scarto di un giorno da UTC).
+  const TZ = 'Europe/Rome';
+  const day = (d) => new Intl.DateTimeFormat('it-IT', { day: 'numeric', timeZone: TZ }).format(d);
+  const monthYear = (d) => new Intl.DateTimeFormat('it-IT', { month: 'long', year: 'numeric', timeZone: TZ }).format(d);
   const s = new Date(ed.start_date);
   const e = ed.end_date ? new Date(ed.end_date) : s;
-  const m = mesi[s.getUTCMonth()];
-  return `${s.getUTCDate()} – ${e.getUTCDate()} ${m} ${s.getUTCFullYear()} · Visso`;
+  return `${day(s)} – ${day(e)} ${monthYear(s)} · Visso`;
 }
 const range = dateRange(edition);
 ---
