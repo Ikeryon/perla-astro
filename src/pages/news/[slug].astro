@@ -1,0 +1,63 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getArticles, getArticle, assetUrl } from '../../lib/directus.js';
+
+export async function getStaticPaths() {
+  const articles = await getArticles();
+  return articles.map((a) => ({ params: { slug: a.slug } }));
+}
+
+const { slug } = Astro.params;
+const article = await getArticle(slug);
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  return new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' }).format(new Date(iso));
+}
+---
+<Base title={(article?.title_it || 'News') + ' — La Perla dei Sibillini'} description={article?.abstract_it} active="news">
+  <div class="page-header">
+    <a href="/news" class="back-link" data-it="← News" data-en="← News">← News</a>
+  </div>
+
+  {article ? (
+    <article class="section" style="padding-top:4px">
+      <div style="font-size:12px;font-weight:700;color:#9a6b1f;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px">
+        {article.category?.name_it && <span data-it={article.category.name_it} data-en={article.category.name_en || article.category.name_it}>{article.category.name_it}</span>}
+        {article.category?.name_it && article.date_created && <span> · </span>}
+        {article.date_created && <span>{fmtDate(article.date_created)}</span>}
+      </div>
+      <h1 class="serif" style="color:#5A1F1B;font-size:26px;line-height:1.15;margin:0 0 10px" data-it={article.title_it} data-en={article.title_en || article.title_it}>{article.title_it}</h1>
+      {article.abstract_it && (
+        <p style="color:#5b5b5b;font-size:16px;line-height:1.5;margin:0 0 14px" data-it={article.abstract_it} data-en={article.abstract_en || article.abstract_it}>{article.abstract_it}</p>
+      )}
+      {article.cover_image && (
+        <img src={assetUrl(article.cover_image)} alt="" style="width:100%;border-radius:16px;display:block;margin:0 0 16px" />
+      )}
+      {article.body_it && (
+        <div class="article-body" data-it-html={article.body_it} data-en-html={article.body_en || article.body_it} set:html={article.body_it}></div>
+      )}
+    </article>
+  ) : (
+    <section class="section">
+      <p class="section-sub" data-it="Notizia non trovata." data-en="Article not found.">Notizia non trovata.</p>
+    </section>
+  )}
+
+  <script is:inline>
+    // Applica la lingua anche al corpo HTML (body_it / body_en) al cambio IT/EN.
+    (function () {
+      function applyBodyLang(lang) {
+        document.querySelectorAll('[data-it-html]').forEach((el) => {
+          const html = lang === 'en' ? (el.getAttribute('data-en-html') || el.getAttribute('data-it-html')) : el.getAttribute('data-it-html');
+          if (html != null) el.innerHTML = html;
+        });
+      }
+      const orig = window.setLang;
+      window.setLang = function (lang) {
+        if (typeof orig === 'function') orig(lang);
+        applyBodyLang(lang);
+      };
+    })();
+  </script>
+</Base>

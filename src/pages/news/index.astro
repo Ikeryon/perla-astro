@@ -1,0 +1,44 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getArticles, assetUrl } from '../../lib/directus.js';
+
+const articles = await getArticles();
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  return new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' }).format(new Date(iso));
+}
+---
+<Base title="News — La Perla dei Sibillini" description="Notizie, attualità e aggiornamenti da Visso e dai Monti Sibillini." active="news">
+  <div class="page-header">
+    <a href="/" class="back-link" data-it="← Home" data-en="← Home">← Home</a>
+    <h1 class="serif"><em data-it="News" data-en="News">News</em></h1>
+    <p class="section-sub" data-it="Attualità e aggiornamenti dal territorio" data-en="News and updates from the territory">Attualità e aggiornamenti dal territorio</p>
+  </div>
+
+  <section class="section" style="padding-top: 8px;">
+    {articles.length === 0 && (
+      <p class="section-sub" data-it="Nessuna notizia al momento." data-en="No news at the moment.">Nessuna notizia al momento.</p>
+    )}
+
+    {articles.map((a) => (
+      <a class="news-card" href={`/news/${a.slug}`} style="display:block;text-decoration:none;color:inherit;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(90,31,27,.08);margin-bottom:16px">
+        {a.cover_image && (
+          <img src={assetUrl(a.cover_image)} alt="" style="width:100%;height:180px;object-fit:cover;display:block" />
+        )}
+        <div style="padding:14px 16px">
+          <div style="font-size:12px;font-weight:700;color:#9a6b1f;text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px">
+            {a.category?.name_it && <span data-it={a.category.name_it} data-en={a.category.name_en || a.category.name_it}>{a.category.name_it}</span>}
+            {a.category?.name_it && a.date_created && <span> · </span>}
+            {a.date_created && <span>{fmtDate(a.date_created)}</span>}
+          </div>
+          <div class="serif" style="font-size:19px;color:#5A1F1B;font-weight:700;line-height:1.2" data-it={a.title_it} data-en={a.title_en || a.title_it}>{a.title_it}</div>
+          {a.abstract_it && (
+            <p style="margin:8px 0 0;color:#5b5b5b;font-size:14px;line-height:1.5" data-it={a.abstract_it} data-en={a.abstract_en || a.abstract_it}>{a.abstract_it}</p>
+          )}
+          <span style="display:inline-block;margin-top:10px;color:#5A1F1B;font-weight:700;font-size:14px" data-it="Leggi →" data-en="Read →">Leggi →</span>
+        </div>
+      </a>
+    ))}
+  </section>
+</Base>

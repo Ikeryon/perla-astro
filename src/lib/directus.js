@@ -30,7 +30,7 @@ export function getProgramme() {
   );
 }
 
-// PROPOSTE speciali (con circuito e luogo)
+// PROPOSTE speciali (con circuito e luogo) — overlay a tempo sui POI
 export function getProposals() {
   return dGet(
     `/items/initiatives?filter[edition][_eq]=${ED}` +
@@ -38,7 +38,15 @@ export function getProposals() {
     `&fields=id,title_it,title_en,subtitle_it,subtitle_en,abstract_it,abstract_en,` +
     `description_it,description_en,booking_url,` +
     `circuit.id,circuit.name_it,circuit.name_en,circuit.slug,circuit.sort,` +
-    `place.name,place.city,place.google_maps_url`
+    `place.id,place.name,place.city,place.google_maps_url`
+  );
+}
+
+// POI / LUOGHI — tutti i punti fissi del territorio (anche senza proposta)
+export function getPlaces() {
+  return dGet(
+    `/items/places?filter[status][_eq]=published&sort=sort&limit=-1` +
+    `&fields=id,name,city,place_type,google_maps_url,description_it,description_en,phone`
   );
 }
 
@@ -48,4 +56,27 @@ export function getCircuits() {
     `/items/circuits?filter[edition][_eq]=${ED}&filter[status][_eq]=published&sort=sort` +
     `&fields=id,name_it,name_en,description_it,description_en,slug`
   );
+}
+
+// URL di un asset (immagine) di Directus a partire dall'id file
+export const assetUrl = (id) => (id ? `${API}/assets/${id}` : '');
+
+// NEWS — articoli pubblicati (i più recenti prima).
+// Nota: relazioni (home_site, category, author, target_sites) verranno aggiunte in un secondo momento;
+// per ora si mostrano tutti gli articoli pubblicati. Le pagine gestiscono già l'assenza di categoria.
+export function getArticles() {
+  return dGet(
+    `/items/articles?filter[status][_eq]=published` +
+    `&sort=-date_created&limit=-1` +
+    `&fields=id,title_it,title_en,slug,abstract_it,date_created`
+  );
+}
+
+export async function getArticle(slug) {
+  const rows = await dGet(
+    `/items/articles?filter[slug][_eq]=${encodeURIComponent(slug)}` +
+    `&filter[status][_eq]=published&limit=1` +
+    `&fields=id,title_it,title_en,slug,abstract_it,body_it,date_created`
+  );
+  return (rows && rows[0]) || null;
 }
