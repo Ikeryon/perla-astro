@@ -1,0 +1,78 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCircuits, getProposals } from '../lib/directus.js';
+
+const circuits = await getCircuits();
+const proposals = await getProposals();
+
+// Raggruppa le proposte per circuito
+const byCircuit = {};
+for (const p of proposals) {
+  const cid = p.circuit?.id;
+  if (!cid) continue;
+  (byCircuit[cid] ||= []).push(p);
+}
+---
+<Base title="Gusto — La Perla dei Sibillini" description="Circuiti, botteghe, punti del gusto ed esperienze: le proposte speciali del territorio." active="gusto">
+  <div class="page-header">
+    <a href="/" class="back-link" data-it="← Home" data-en="← Home">← Home</a>
+    <h1 class="serif"><span data-it="Il" data-en="The">Il</span> <em data-it="gusto" data-en="flavour">gusto</em></h1>
+    <p class="section-sub" data-it="Circuiti, botteghe, punti del gusto ed esperienze del territorio" data-en="Circuits, shops, flavour spots and experiences of the territory">Circuiti, botteghe, punti del gusto ed esperienze del territorio</p>
+  </div>
+
+  <section class="section" style="padding-top: 8px;">
+    <div class="filter-chips">
+      <button class="filter-chip active" data-filter="all" data-it="Tutti" data-en="All">Tutti</button>
+      {circuits.map((c) => (
+        <button class="filter-chip" data-filter={c.slug} data-it={c.name_it} data-en={c.name_en}>{c.name_it}</button>
+      ))}
+    </div>
+
+    {circuits.map((c) => (
+      <div class="filter-group" data-category={c.slug}>
+        <h2 class="subsection-title serif" data-it={c.name_it} data-en={c.name_en}>{c.name_it}</h2>
+        {c.description_it && (
+          <p class="subsection-intro" data-it={c.description_it} data-en={c.description_en}>{c.description_it}</p>
+        )}
+
+        {(byCircuit[c.id] || []).map((p) => (
+          <div class="venue-card">
+            <div class="venue-name">{p.title_it}</div>
+            {p.place?.city && <div class="venue-place">{p.place.city}</div>}
+            {p.abstract_it && (
+              <div class="venue-desc" data-it={p.abstract_it} data-en={p.abstract_en}>{p.abstract_it}</div>
+            )}
+            {p.place?.google_maps_url && (
+              <a class="venue-directions" href={p.place.google_maps_url} target="_blank" rel="noopener">📍 <span data-it="Portami qui" data-en="Take me there">Portami qui</span></a>
+            )}
+            {(p.subtitle_it || p.description_it) && (
+              <>
+                <button class="proposal-toggle" onclick="toggleProposal(this)">🍽️ <span data-it="Scopri la proposta speciale" data-en="Discover the special offer">Scopri la proposta speciale</span></button>
+                <div class="venue-proposal">
+                  {p.subtitle_it && <p><strong data-it={p.subtitle_it} data-en={p.subtitle_en}>{p.subtitle_it}</strong></p>}
+                  {p.description_it && <p data-it={p.description_it} data-en={p.description_en}>{p.description_it}</p>}
+                </div>
+              </>
+            )}
+            {p.booking_url && (
+              <a class="book-btn" href={p.booking_url}>📞 <span data-it="Chiama" data-en="Call">Chiama</span></a>
+            )}
+          </div>
+        ))}
+      </div>
+    ))}
+  </section>
+
+  <script is:inline>
+    document.querySelectorAll('.filter-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chip').forEach((c) => c.classList.remove('active'));
+        chip.classList.add('active');
+        const filter = chip.dataset.filter;
+        document.querySelectorAll('.filter-group').forEach((group) => {
+          group.style.display = (filter === 'all' || group.dataset.category === filter) ? '' : 'none';
+        });
+      });
+    });
+  </script>
+</Base>

@@ -1,0 +1,67 @@
+---
+import Base from '../layouts/Base.astro';
+import { getEdition, getProgramme, getCircuits } from '../lib/directus.js';
+
+const edition = await getEdition();
+const programme = await getProgramme();
+const circuits = await getCircuits();
+const preview = programme.slice(0, 3);
+
+function dateRange(ed) {
+  if (!ed?.start_date) return '';
+  const mesi = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+  const s = new Date(ed.start_date);
+  const e = ed.end_date ? new Date(ed.end_date) : s;
+  const m = mesi[s.getUTCMonth()];
+  return `${s.getUTCDate()} – ${e.getUTCDate()} ${m} ${s.getUTCFullYear()} · Visso`;
+}
+const range = dateRange(edition);
+---
+<Base title={edition?.title_it || 'La Perla dei Sibillini'} description={edition?.abstract_it} active="home">
+  <section class="hero">
+    <img class="hero-swirl" src="/images/g-swirl.png" alt="" />
+    <a href="https://tipicita.it/esperienze.php" target="_blank" rel="noopener">
+      <img class="grand-tour-badge" src="/images/grand-tour-badge.png" alt="Grand Tour delle Marche · Tappa Ufficiale" />
+    </a>
+    <div class="hero-content">
+      <p class="hero-dates">{range}</p>
+      <p class="hero-presents" data-it="La perla dei Sibillini presenta" data-en="La perla dei Sibillini presents">La perla dei Sibillini presenta</p>
+      <h1 class="hero-logotype-wrap">
+        <img class="hero-logotype" src="/images/logotype.png" alt={edition?.title_it} />
+      </h1>
+      {edition?.subtitle_it && (
+        <p class="hero-sub" data-it={edition.subtitle_it} data-en={edition.subtitle_en}>{edition.subtitle_it}</p>
+      )}
+    </div>
+    <div class="hero-photo-wrap">
+      <img class="hero-photo" src="/images/hero.png" alt="Visso" />
+    </div>
+  </section>
+
+  <nav class="cta-row">
+    <a href="/programma" class="cta-btn primary" data-it="📅 Programma" data-en="📅 Schedule">📅 Programma</a>
+    <a href="/gusto" class="cta-btn" data-it="🍽️ Gusto" data-en="🍽️ Food">🍽️ Gusto</a>
+  </nav>
+
+  <section class="section">
+    <h2 class="serif"><span data-it="Il programma" data-en="The programme">Il programma</span></h2>
+    <p class="section-sub" data-it="Alcuni appuntamenti da vivere" data-en="A few highlights to experience">Alcuni appuntamenti da vivere</p>
+
+    {preview.map((it) => (
+      <div class="day-card">
+        {it.abstract_it && <div class="day-label" data-it={it.abstract_it} data-en={it.abstract_en}>{it.abstract_it}</div>}
+        <div class="day-title serif" data-it={it.title_it} data-en={it.title_en}>{it.title_it}</div>
+      </div>
+    ))}
+
+    <a href="/programma" class="see-all" data-it="Vedi tutto il programma →" data-en="See full programme →">Vedi tutto il programma →</a>
+  </section>
+
+  <section class="section">
+    <div class="tavolozza-block">
+      <h3 class="serif" data-it="I circuiti del gusto" data-en="The flavour circuits">I circuiti del gusto</h3>
+      <p data-it="Punti del gusto, botteghe, esperienze e proposte speciali dei locali del territorio." data-en="Flavour spots, shops, experiences and special offers from the local venues.">Punti del gusto, botteghe, esperienze e proposte speciali dei locali del territorio.</p>
+      <a href="/gusto" class="tav-link" data-it="Scopri il gusto →" data-en="Discover the flavour →">Scopri il gusto →</a>
+    </div>
+  </section>
+</Base>

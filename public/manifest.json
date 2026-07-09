@@ -1,0 +1,17 @@
+{
+  "name": "La Perla dei Sibillini — Le Guaite del Gusto",
+  "short_name": "Perla dei Sibillini",
+  "description": "Visso e i Monti Sibillini: programma, gusto e iniziative del territorio.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FBF6F1",
+  "theme_color": "#5A1F1B",
+  "lang": "it",
+  "icons": [
+    { "src": "/images/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/images/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/images/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/images/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

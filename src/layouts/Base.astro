@@ -1,0 +1,73 @@
+---
+const { title = 'La Perla dei Sibillini', description = 'Visso e i Monti Sibillini: eventi, iniziative e sapori del territorio.', active = '' } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#5A1F1B" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="it_IT" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content="/images/hero.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" href="/images/favicon.png" />
+  <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="/css/fonts.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="lang-switch">
+      <span class="active" onclick="setLang('it')">IT</span>
+      <span onclick="setLang('en')">EN</span>
+    </div>
+    <div class="logo-block">
+      <img src="/images/logo-visso.png" alt="Comune di Visso" class="logo-crest" />
+      <span class="logo-text serif">La perla dei Sibillini</span>
+    </div>
+  </header>
+
+  <div class="install-banner" id="installBanner">
+    <div class="install-icon">⬇</div>
+    <div class="install-text">
+      <strong data-it="Visso sempre in tasca" data-en="Visso always with you">Visso sempre in tasca</strong>
+      <span data-it="Salva l'app sulla Home" data-en="Save the app to your Home">Salva l'app sulla Home</span>
+    </div>
+    <button onclick="installApp()" data-it="Installa" data-en="Install">Installa</button>
+  </div>
+
+  <slot />
+
+  <div class="mobile-footer">
+    <a href="https://tipicita.it/privacy.php" target="_blank" rel="noopener" data-it="Privacy Policy" data-en="Privacy Policy">Privacy Policy</a>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="/" class={"nav-item" + (active === 'home' ? ' active' : '')}>
+      <span class="nav-icon">⌂</span>
+      <span data-it="Home" data-en="Home">Home</span>
+    </a>
+    <a href="/programma" class={"nav-item" + (active === 'programma' ? ' active' : '')}>
+      <span class="nav-icon">📅</span>
+      <span data-it="Programma" data-en="Schedule">Programma</span>
+    </a>
+    <a href="/gusto" class={"nav-item" + (active === 'gusto' ? ' active' : '')}>
+      <span class="nav-icon">🍽</span>
+      <span data-it="Gusto" data-en="Food">Gusto</span>
+    </a>
+  </nav>
+
+  <button class="contact-fab" onclick="contactWhatsApp()" aria-label="Contattaci su WhatsApp">
+    💬 <span data-it="Contattaci" data-en="Contact us">Contattaci</span>
+  </button>
+
+  <script src="/js/app.js" is:inline></script>
+</body>
+</html>
