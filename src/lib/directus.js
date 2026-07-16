@@ -16,7 +16,10 @@ async function dGet(path) {
   const headers = TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {};
   const res = await fetch(API + path, { headers });
   if (!res.ok) {
-    throw new Error(`Directus ${res.status} su ${path}`);
+    const body = await res.text().catch(() => '');
+    throw new Error(
+      `Directus ${res.status} su ${path} — token ${TOKEN ? 'PRESENTE' : 'ASSENTE'} — ${body.slice(0, 300)}`
+    );
   }
   const json = await res.json();
   return json.data;
