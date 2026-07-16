@@ -1,4 +1,5 @@
 ---
+import Newsletter from '../components/Newsletter.astro';
 import IconHome from '../components/icons/IconHome.astro';
 import IconProgramma from '../components/icons/IconProgramma.astro';
 import IconGusto from '../components/icons/IconGusto.astro';
@@ -86,8 +87,10 @@ const ogImage = new URL('/images/hero.png', Astro.site);
 
   <slot />
 
+  <Newsletter />
+
   <div class="mobile-footer">
-    <a href="/news#newsletter" data-it="Newsletter" data-en="Newsletter">Newsletter</a>
+    <a href="#" onclick="openNewsletter();return false" data-it="Newsletter" data-en="Newsletter">Newsletter</a>
     <span aria-hidden="true"> · </span>
     <a href="https://tipicita.it/privacy.php" target="_blank" rel="noopener" data-it="Privacy Policy" data-en="Privacy Policy">Privacy Policy</a>
   </div>

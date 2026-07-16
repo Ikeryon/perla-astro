@@ -1,0 +1,92 @@
+{/* Newsletter Tipicità: bannerino → modale di iscrizione.
+   Componente autonomo e riusabile sugli altri portali Anigami (EVO, ecc.):
+   basta copiarlo insieme a /api/subscribe e agli stili .nl-* — la newsletter
+   di destinazione è la stessa per tutto l'universo Anigami (lista Brevo #209,
+   double opt-in gestito dallo scenario "NL_Invio conferma"). */}
+
+<button type="button" class="nl-banner" onclick="openNewsletter()">
+  <span aria-hidden="true">✉️</span>
+  <span data-it="Resta aggiornato: iscriviti alla newsletter di Tipicità" data-en="Stay updated: subscribe to the Tipicità newsletter">Resta aggiornato: iscriviti alla newsletter di Tipicità</span>
+  <span class="nl-banner-arrow" aria-hidden="true">→</span>
+</button>
+
+<div class="nl-overlay" id="nlOverlay" hidden>
+  <div class="nl-modal" role="dialog" aria-modal="true" aria-labelledby="nlTitle">
+    <button type="button" class="nl-close" onclick="closeNewsletter()" aria-label="Chiudi">✕</button>
+    <h2 id="nlTitle" data-it="La newsletter di Tipicità" data-en="The Tipicità newsletter">La newsletter di Tipicità</h2>
+    <p class="nl-intro" data-it="Notizie, eventi e sapori dal territorio, direttamente nella tua casella. Riceverai un'email per confermare l'iscrizione." data-en="News, events and flavours from the territory, straight to your inbox. You'll receive an email to confirm your subscription.">Notizie, eventi e sapori dal territorio, direttamente nella tua casella. Riceverai un'email per confermare l'iscrizione.</p>
+
+    <form id="nlForm" novalidate>
+      <input type="email" id="nlEmail" name="email" required placeholder="la-tua@email.it" class="nl-input" />
+      {/* honeypot anti-bot: invisibile agli umani */}
+      <input type="text" name="website" id="nlWebsite" tabindex="-1" autocomplete="off" aria-hidden="true"
+        style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" />
+      <label class="nl-consent">
+        <input type="checkbox" id="nlConsent" required style="margin-top:2px" />
+        <span data-it="Ho letto l'informativa privacy e acconsento a ricevere la newsletter." data-en="I have read the privacy policy and agree to receive the newsletter.">Ho letto l'informativa privacy e acconsento a ricevere la newsletter.</span>
+      </label>
+      <a class="nl-privacy" href="https://tipicita.it/privacy.php" target="_blank" rel="noopener" data-it="Leggi l'informativa privacy" data-en="Read the privacy policy">Leggi l'informativa privacy</a>
+      <button type="submit" class="book-btn ext" id="nlSubmit" style="margin-top:14px">✉️ <span data-it="Iscriviti" data-en="Subscribe">Iscriviti</span></button>
+    </form>
+    <p id="nlMsg" class="nl-msg" role="status"></p>
+  </div>
+</div>
+
+<script is:inline>
+  (function () {
+    var overlay = document.getElementById('nlOverlay');
+    if (!overlay) return;
+
+    window.openNewsletter = function () {
+      overlay.hidden = false;
+      applyLangIn(overlay);
+      var em = document.getElementById('nlEmail');
+      if (em) setTimeout(function () { em.focus(); }, 60);
+    };
+    window.closeNewsletter = function () { overlay.hidden = true; };
+
+    overlay.addEventListener('click', function (ev) { if (ev.target === overlay) window.closeNewsletter(); });
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !overlay.hidden) window.closeNewsletter(); });
+
+    function lang() { try { return localStorage.getItem('lang') || 'it'; } catch (e) { return 'it'; } }
+    // riallinea i testi della modale alla lingua corrente quando si apre
+    function applyLangIn(root) {
+      var l = lang();
+      root.querySelectorAll('[data-it]').forEach(function (el) {
+        var t = el.getAttribute('data-' + l);
+        if (t) el.textContent = t;
+      });
+    }
+
+    var MSG = {
+      ok: { it: 'Quasi fatto! Controlla la tua email e clicca il link di conferma.', en: 'Almost done! Check your inbox and click the confirmation link.' },
+      invalid: { it: 'Inserisci un indirizzo email valido.', en: 'Please enter a valid email address.' },
+      consent: { it: "Per iscriverti devi accettare l'informativa privacy.", en: 'You need to accept the privacy policy to subscribe.' },
+      error: { it: 'Ops, qualcosa è andato storto. Riprova tra poco.', en: 'Oops, something went wrong. Please try again shortly.' },
+    };
+    function show(key, ok) {
+      var el = document.getElementById('nlMsg');
+      el.textContent = MSG[key][lang()] || MSG[key].it;
+      el.style.color = ok ? '#1a7f37' : '#b3261e';
+      el.style.display = 'block';
+    }
+
+    document.getElementById('nlForm').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var email = document.getElementById('nlEmail').value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return show('invalid', false);
+      if (!document.getElementById('nlConsent').checked) return show('consent', false);
+      var btn = document.getElementById('nlSubmit');
+      btn.disabled = true; btn.style.opacity = '.6';
+      fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, lang: lang(), website: document.getElementById('nlWebsite').value }),
+      })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function () { show('ok', true); document.getElementById('nlForm').reset(); })
+        .catch(function () { show('error', false); })
+        .finally(function () { btn.disabled = false; btn.style.opacity = ''; });
+    });
+  })();
+</script>

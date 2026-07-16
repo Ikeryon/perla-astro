@@ -1,6 +1,5 @@
 ---
 import Base from '../../layouts/Base.astro';
-import NewsletterBox from '../../components/NewsletterBox.astro';
 import { getArticles, assetUrl } from '../../lib/directus.js';
 
 const articles = await getArticles();
@@ -18,8 +17,6 @@ function fmtDate(iso) {
   </div>
 
   <section class="section" style="padding-top: 8px;">
-    <NewsletterBox />
-
     {articles.length === 0 && (
       <p class="section-sub" data-it="Nessuna notizia al momento." data-en="No news at the moment.">Nessuna notizia al momento.</p>
     )}
