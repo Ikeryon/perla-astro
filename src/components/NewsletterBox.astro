@@ -1,0 +1,58 @@
+{/* Box iscrizione newsletter Tipicità: form nativo → POST /api/subscribe (Brevo).
+   Il double opt-in (email di conferma) è gestito dallo scenario Brevo "NL_Invio conferma". */}
+<div class="callout" id="newsletter" style="margin-top:4px">
+  <strong style="display:block;margin-bottom:4px" data-it="La newsletter di Tipicità" data-en="The Tipicità newsletter">La newsletter di Tipicità</strong>
+  <span data-it="Notizie, eventi e sapori dal territorio, direttamente nella tua casella. Riceverai un'email per confermare l'iscrizione." data-en="News, events and flavours from the territory, straight to your inbox. You'll receive an email to confirm your subscription.">Notizie, eventi e sapori dal territorio, direttamente nella tua casella. Riceverai un'email per confermare l'iscrizione.</span>
+
+  <form id="nlForm" style="margin-top:12px" novalidate>
+    <input type="email" id="nlEmail" name="email" required placeholder="la-tua@email.it"
+      style="width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid rgba(90,31,27,.25);border-radius:12px;font:inherit;font-size:15px;background:#fff" />
+    {/* honeypot anti-bot: invisibile agli umani */}
+    <input type="text" name="website" id="nlWebsite" tabindex="-1" autocomplete="off" aria-hidden="true"
+      style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" />
+    <label style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:12.5px;line-height:1.45;cursor:pointer">
+      <input type="checkbox" id="nlConsent" required style="margin-top:2px" />
+      <span data-it="Ho letto l'informativa privacy e acconsento a ricevere la newsletter." data-en="I have read the privacy policy and agree to receive the newsletter.">Ho letto l'informativa privacy e acconsento a ricevere la newsletter.</span>
+    </label>
+    <a href="https://tipicita.it/privacy.php" target="_blank" rel="noopener" style="font-size:12px;text-decoration:underline;color:inherit;opacity:.7" data-it="Leggi l'informativa privacy" data-en="Read the privacy policy">Leggi l'informativa privacy</a>
+    <button type="submit" class="book-btn ext" id="nlSubmit" style="margin-top:12px">✉️ <span data-it="Iscriviti" data-en="Subscribe">Iscriviti</span></button>
+  </form>
+  <p id="nlMsg" role="status" style="display:none;margin:10px 0 0;font-size:13.5px;font-weight:600"></p>
+</div>
+
+<script is:inline>
+  (function () {
+    var form = document.getElementById('nlForm');
+    if (!form) return;
+    var MSG = {
+      ok: { it: 'Quasi fatto! Controlla la tua email e clicca il link di conferma.', en: 'Almost done! Check your inbox and click the confirmation link.' },
+      invalid: { it: 'Inserisci un indirizzo email valido.', en: 'Please enter a valid email address.' },
+      consent: { it: "Per iscriverti devi accettare l'informativa privacy.", en: 'You need to accept the privacy policy to subscribe.' },
+      error: { it: 'Ops, qualcosa è andato storto. Riprova tra poco.', en: 'Oops, something went wrong. Please try again shortly.' },
+    };
+    function lang() { try { return localStorage.getItem('lang') || 'it'; } catch (e) { return 'it'; } }
+    function show(key, ok) {
+      var el = document.getElementById('nlMsg');
+      el.textContent = MSG[key][lang()] || MSG[key].it;
+      el.style.color = ok ? '#1a7f37' : '#b3261e';
+      el.style.display = 'block';
+    }
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var email = document.getElementById('nlEmail').value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return show('invalid', false);
+      if (!document.getElementById('nlConsent').checked) return show('consent', false);
+      var btn = document.getElementById('nlSubmit');
+      btn.disabled = true; btn.style.opacity = '.6';
+      fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, lang: lang(), website: document.getElementById('nlWebsite').value }),
+      })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function () { show('ok', true); form.reset(); })
+        .catch(function () { show('error', false); })
+        .finally(function () { btn.disabled = false; btn.style.opacity = ''; });
+    });
+  })();
+</script>
