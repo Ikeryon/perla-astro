@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getEdition, getProgramme, getCircuits } from '../lib/directus.js';
+import { getEdition, getProgramme, getCircuits, getArticles } from '../lib/directus.js';
 
 // LA TAVOLOZZA — intro editoriale della sezione gusto (contenuto stabile nel codice).
 const TAVOLOZZA_BOOKING_URL = 'https://tipicita.it/dettaglio_attivita.php?idAttivita=959';
@@ -53,6 +53,15 @@ const edition = await getEdition();
 const programme = await getProgramme();
 const circuits = await getCircuits();
 const preview = programme.slice(0, 3);
+
+// ultima news pubblicata (le news sono ordinate dalla più recente)
+const articles = await getArticles();
+const latestNews = articles[0] || null;
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  return new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' }).format(new Date(iso));
+}
 
 function dateRange(ed) {
   if (!ed?.start_date) return '';
@@ -134,4 +143,26 @@ const range = dateRange(edition);
       <a href="/gusto" class="tav-link" data-it="Scopri il gusto →" data-en="Discover the flavour →">Scopri il gusto →</a>
     </div>
   </section>
+
+  {latestNews && (
+    <section class="section">
+      <h2 class="serif"><span data-it="Dalle news" data-en="From the news">Dalle news</span></h2>
+      <p class="section-sub" data-it="L'ultima notizia dal territorio" data-en="The latest news from the territory">L'ultima notizia dal territorio</p>
+
+      <a class="news-card" href={`/news/${latestNews.slug}`} style="display:block;text-decoration:none;color:inherit;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(90,31,27,.08)">
+        <div style="padding:14px 16px">
+          {latestNews.date_created && (
+            <div style="font-size:12px;font-weight:700;color:#9a6b1f;text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px">{fmtDate(latestNews.date_created)}</div>
+          )}
+          <div class="serif" style="font-size:19px;color:#5A1F1B;font-weight:700;line-height:1.2" data-it={latestNews.title_it} data-en={latestNews.title_en || latestNews.title_it}>{latestNews.title_it}</div>
+          {latestNews.abstract_it && (
+            <p style="margin:8px 0 0;color:#5b5b5b;font-size:14px;line-height:1.5" data-it={latestNews.abstract_it} data-en={latestNews.abstract_en || latestNews.abstract_it}>{latestNews.abstract_it}</p>
+          )}
+          <span style="display:inline-block;margin-top:10px;color:#5A1F1B;font-weight:700;font-size:14px" data-it="Leggi →" data-en="Read →">Leggi →</span>
+        </div>
+      </a>
+
+      <a href="/news" class="see-all" data-it="Leggi tutte le news →" data-en="Read all the news →">Leggi tutte le news →</a>
+    </section>
+  )}
 </Base>
