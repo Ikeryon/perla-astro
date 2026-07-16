@@ -73,7 +73,7 @@ export function getArticles() {
   return dGet(
     `/items/articles?filter[status][_eq]=published` +
     `&sort=-date_created&limit=-1` +
-    `&fields=id,title_it,title_en,slug,abstract_it,date_created`
+    `&fields=id,title_it,title_en,slug,abstract_it,abstract_en,date_created`
   );
 }
 
@@ -81,7 +81,7 @@ export async function getArticle(slug) {
   const rows = await dGet(
     `/items/articles?filter[slug][_eq]=${encodeURIComponent(slug)}` +
     `&filter[status][_eq]=published&limit=1` +
-    `&fields=id,title_it,title_en,slug,abstract_it,body_it,date_created`
+    `&fields=id,title_it,title_en,slug,abstract_it,abstract_en,body_it,body_en,date_created`
   );
   return (rows && rows[0]) || null;
 }
