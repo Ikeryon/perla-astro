@@ -2,8 +2,15 @@
 // Se nelle env c'è DIRECTUS_TOKEN (Secrets di Vercel), le chiamate sono autenticate
 // col token read-only del build-bot: così l'API pubblica anonima può essere spenta.
 // Senza token si ricade sulla chiamata anonima (utile finché la lettura Public è attiva).
-const API = import.meta.env.DIRECTUS_URL || 'https://opalescent-hoatzin.pikapod.net';
-const TOKEN = import.meta.env.DIRECTUS_TOKEN;
+// NB: le env impostate su Vercel arrivano in process.env (import.meta.env copre
+// solo i file .env locali) → si leggono entrambe.
+const API =
+  import.meta.env.DIRECTUS_URL || process.env.DIRECTUS_URL || 'https://opalescent-hoatzin.pikapod.net';
+const TOKEN = import.meta.env.DIRECTUS_TOKEN || process.env.DIRECTUS_TOKEN;
+
+if (!TOKEN) {
+  console.warn('[directus] Nessun DIRECTUS_TOKEN nelle env: chiamate anonime (ok solo se la lettura Public è attiva).');
+}
 
 async function dGet(path) {
   const headers = TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {};
