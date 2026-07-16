@@ -5,6 +5,11 @@ import { getEdition, getProgramme } from '../lib/directus.js';
 const edition = await getEdition();
 const items = await getProgramme();
 
+// Iniziative esaurite: al posto di "Prenota" compare il bottone rosso SOLD OUT
+// (match sul titolo, gestione editoriale nel codice).
+const SOLD_OUT = ['esplora visso', 'bagno nei sibillini'];
+const isSoldOut = (it) => SOLD_OUT.some((s) => (it.title_it || '').toLowerCase().includes(s));
+
 // Dati strutturati (SEO): l'edizione come schema.org/Event
 const eventLd = edition && {
   '@context': 'https://schema.org',
@@ -44,8 +49,12 @@ const eventLd = edition && {
         )}
         <div class="foot-row" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px">
           {it.price_info && <span class="pill" style="font-size:12px;color:var(--maroon-soft);font-weight:700">{it.price_info}</span>}
-          {it.booking_url && (
-            <a class="book-btn" href={it.booking_url} target="_blank" rel="noopener" style="margin:0">💬 <span data-it="Prenota" data-en="Book">Prenota</span></a>
+          {isSoldOut(it) ? (
+            <span class="book-btn soldout" style="margin:0" aria-disabled="true">SOLD OUT</span>
+          ) : (
+            it.booking_url && (
+              <a class="book-btn" href={it.booking_url} target="_blank" rel="noopener" style="margin:0">💬 <span data-it="Prenota" data-en="Book">Prenota</span></a>
+            )
           )}
         </div>
       </div>

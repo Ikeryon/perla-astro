@@ -1095,6 +1095,15 @@ a.book-btn span {
 .venue-proposal p:first-child { margin-top: 0; }
 
 /* ── BOTTONE DISATTIVATO (in attesa di link) ── */
+.book-btn.soldout {
+  background: #c62828;
+  color: #fff;
+  cursor: default;
+  pointer-events: none;
+  letter-spacing: 0.06em;
+}
+.book-btn.soldout span { color: #fff; }
+
 .book-btn.disabled {
   display: inline-flex;
   align-items: center;
