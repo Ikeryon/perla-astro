@@ -1,0 +1,72 @@
+---
+import Base from '../layouts/Base.astro';
+import { getPlaces } from '../lib/directus.js';
+
+const places = await getPlaces();
+
+// Categorie della mappa nell'ordine del vecchio sito, con le etichette bilingui.
+// Ogni categoria raccoglie uno o più place_type di Directus.
+const CATEGORIES = [
+  { types: ['Parcheggio'], it: 'Parcheggi', en: 'Parking' },
+  { types: ['Luogo evento'], it: "Piazze e luoghi dell'evento", en: 'Squares and event venues' },
+  { types: ['Punto del gusto'], it: 'Punti del gusto', en: 'Flavour spots' },
+  { types: ['Bottega'], it: 'Botteghe', en: 'Shops' },
+  { types: ['Acquacoltura', 'Dispensa', 'Esperienza'], it: 'Produttori e dispensa', en: 'Producers and pantry' },
+  { types: ['Ospitalità'], it: 'Ospitalità', en: 'Where to stay' },
+];
+
+// Per parcheggi e luoghi-evento il sottotitolo è la breve nota bilingue in description
+// ("Centro · gratuito", "Frazione di Visso"); per i POI resta la città (le loro
+// description sono i testi lunghi usati in Gusto).
+const SHORT_DESC_TYPES = ['Parcheggio', 'Luogo evento'];
+const subtitle = (pl) =>
+  SHORT_DESC_TYPES.includes(pl.place_type) && pl.description_it
+    ? { it: pl.description_it, en: pl.description_en || pl.description_it }
+    : pl.city
+      ? { it: pl.city, en: pl.city }
+      : null;
+---
+<Base
+  title="Mappa — La Perla dei Sibillini"
+  description="Tutti i luoghi del territorio di Visso su mappa, con indicazioni stradali dirette."
+  active="mappa"
+>
+  <div class="page-header">
+    <a href="/" class="back-link" data-it="← Home" data-en="← Home">← Home</a>
+    <h1 class="serif"><span data-it="La" data-en="The">La</span> <em data-it="mappa" data-en="map">mappa</em></h1>
+    <p class="section-sub" data-it="Tutti i luoghi del territorio, tocca per aprire in maps" data-en="All the places of the territory, tap to open in maps">Tutti i luoghi del territorio, tocca per aprire in maps</p>
+  </div>
+
+  <section class="section" style="padding-top: 8px;">
+
+    <div class="map-embed">
+      <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=13.045%2C42.905%2C13.135%2C42.960&layer=mapnik&marker=42.9312%2C13.0885" loading="lazy" title="Visso"></iframe>
+    </div>
+    <a class="see-all" style="margin-top: 10px;" href="https://www.google.com/maps/search/?api=1&query=Visso+MC" target="_blank" rel="noopener" data-it="Apri in Google Maps →" data-en="Open in Google Maps →">Apri in Google Maps →</a>
+
+    {CATEGORIES.map((cat) => {
+      const list = places.filter((pl) => cat.types.includes(pl.place_type));
+      if (!list.length) return null;
+      return (
+        <>
+          <div class="map-cat-title" data-it={cat.it} data-en={cat.en}>{cat.it}</div>
+          {list.map((pl) => {
+            const sub = subtitle(pl);
+            return (
+              <a class="map-item" href={pl.google_maps_url} target="_blank" rel="noopener">
+                <div class="map-item-text">
+                  <span class="map-item-name">{pl.name}</span>
+                  {sub && (
+                    <span class="map-item-place" data-it={sub.it} data-en={sub.en}>{sub.it}</span>
+                  )}
+                </div>
+                <span class="map-item-arrow">↗</span>
+              </a>
+            );
+          })}
+        </>
+      );
+    })}
+
+  </section>
+</Base>

@@ -436,6 +436,10 @@ body {
 
 .nav-icon { font-size: 18px; }
 
+/* icone SVG inline nella bottom-nav: stessa altezza delle emoji,
+   colore ereditato dallo stato della voce (currentColor) */
+.nav-icon svg { display: block; height: 18px; width: auto; margin: 0 auto; }
+
 /* spazio sotto per il nav fisso */
 body { padding-bottom: 80px; }
 

@@ -1,5 +1,8 @@
 // Service worker minimale: rete-prima, cache come riserva offline.
-const CACHE = 'perla-astro-v1';
+// __BUILD__ viene sostituito ad ogni build (integrazione sw-version in astro.config.mjs):
+// la versione cache cambia ad ogni release e i client installati (compresa la vecchia
+// PWA "guaite-del-gusto-*", stesso scope /) si aggiornano al primo accesso.
+const CACHE = 'perla-astro-__BUILD__';
 
 self.addEventListener('install', () => self.skipWaiting());
 

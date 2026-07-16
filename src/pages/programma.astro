@@ -4,8 +4,28 @@ import { getEdition, getProgramme } from '../lib/directus.js';
 
 const edition = await getEdition();
 const items = await getProgramme();
+
+// Dati strutturati (SEO): l'edizione come schema.org/Event
+const eventLd = edition && {
+  '@context': 'https://schema.org',
+  '@type': 'Event',
+  name: edition.title_it,
+  description: edition.abstract_it || edition.subtitle_it || undefined,
+  startDate: edition.start_date,
+  endDate: edition.end_date,
+  eventStatus: 'https://schema.org/EventScheduled',
+  eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+  location: {
+    '@type': 'Place',
+    name: 'Visso',
+    address: { '@type': 'PostalAddress', addressLocality: 'Visso', addressRegion: 'Marche', addressCountry: 'IT' },
+  },
+  image: [new URL('/images/hero.png', Astro.site).href],
+  url: new URL('/programma', Astro.site).href,
+};
 ---
 <Base title="Programma — Le Guaite del Gusto" description="Il programma completo di Le Guaite del Gusto a Visso." active="programma">
+  {eventLd && <script type="application/ld+json" set:html={JSON.stringify(eventLd)} />}
   <div class="page-header">
     <a href="/" class="back-link" data-it="← Home" data-en="← Home">← Home</a>
     <h1 class="serif"><span data-it="Il" data-en="The">Il</span> <em data-it="programma" data-en="programme">programma</em></h1>

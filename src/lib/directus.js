@@ -1,8 +1,13 @@
-// Client minimale per l'API pubblica di Directus (lettura in fase di build).
+// Client minimale per Directus (lettura in fase di build).
+// Se nelle env c'è DIRECTUS_TOKEN (Secrets di Vercel), le chiamate sono autenticate
+// col token read-only del build-bot: così l'API pubblica anonima può essere spenta.
+// Senza token si ricade sulla chiamata anonima (utile finché la lettura Public è attiva).
 const API = import.meta.env.DIRECTUS_URL || 'https://opalescent-hoatzin.pikapod.net';
+const TOKEN = import.meta.env.DIRECTUS_TOKEN;
 
 async function dGet(path) {
-  const res = await fetch(API + path);
+  const headers = TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {};
+  const res = await fetch(API + path, { headers });
   if (!res.ok) {
     throw new Error(`Directus ${res.status} su ${path}`);
   }

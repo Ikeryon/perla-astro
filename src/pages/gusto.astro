@@ -30,6 +30,54 @@ for (const pl of places) {
   const slug = TYPE_TO_SLUG[pl.place_type] || 'altro';
   (placesBySlug[slug] ||= []).push(pl);
 }
+
+// LA TAVOLOZZA — intro editoriale (ex pagina Tavolozza, assorbita in Gusto).
+// Contenuto stabile, gestito nel codice per la v1 (migrabile a CMS in seguito).
+const TAVOLOZZA_BOOKING_URL = 'https://tipicita.it/dettaglio_attivita.php?idAttivita=959';
+const TAVOLOZZA = [
+  {
+    img: '/images/legumi.jpg',
+    tag_it: 'La terra', tag_en: 'The land',
+    title_it: 'Legumi', title_en: 'Legumes',
+    text_it: 'I gioielli dei Sibillini: lenticchie, roveja e cicerchia, piccoli tesori della cucina di montagna.',
+    text_en: 'The jewels of the Sibillini: lentils, roveja and cicerchia, small treasures of mountain cuisine.',
+  },
+  {
+    img: '/images/miele.jpg',
+    tag_it: 'I fiori', tag_en: 'The flowers',
+    title_it: 'Miele', title_en: 'Honey',
+    text_it: 'La dolcezza naturale dei pascoli e dei boschi, racchiusa nei profumi dei Sibillini.',
+    text_en: 'The natural sweetness of pastures and woods, held in the scents of the Sibillini.',
+  },
+  {
+    img: '/images/tartufo.jpg',
+    tag_it: 'Il bosco', tag_en: 'The woods',
+    title_it: 'Tartufo', title_en: 'Truffle',
+    text_it: "Il profumo prezioso e nascosto dell'Appennino, capace di accendere ogni sapore.",
+    text_en: 'The precious, hidden scent of the Apennines, able to bring every flavour to life.',
+  },
+  {
+    img: '/images/trota.jpg',
+    tag_it: "L'acqua", tag_en: 'The water',
+    title_it: 'Trota', title_en: 'Trout',
+    text_it: 'La freschezza viva di sorgenti e torrenti, anima limpida della montagna vissana.',
+    text_en: 'The living freshness of springs and streams, the clear soul of the Visso mountains.',
+  },
+  {
+    img: '/images/salumi.jpg',
+    tag_it: 'La norcineria', tag_en: 'The norcineria',
+    title_it: 'Salumi', title_en: 'Cured meats',
+    text_it: 'Saperi antichi, stagionature lente e sapori decisi della tradizione appenninica.',
+    text_en: 'Ancient know-how, slow ageing and bold flavours of the Apennine tradition.',
+  },
+  {
+    img: '/images/formaggio.jpg',
+    tag_it: 'I pascoli', tag_en: 'The pastures',
+    title_it: 'Formaggi', title_en: 'Cheeses',
+    text_it: 'La pecora Sopravissana e il gusto delle erbe di montagna custodito nei formaggi.',
+    text_en: 'The Sopravissana sheep and the taste of mountain herbs kept in the cheeses.',
+  },
+];
 ---
 <Base title="Gusto — La Perla dei Sibillini" description="Circuiti, botteghe, punti del gusto ed esperienze del territorio, con le proposte speciali del momento." active="gusto">
   <div class="page-header">
@@ -38,7 +86,32 @@ for (const pl of places) {
     <p class="section-sub" data-it="I luoghi del gusto del territorio, con le proposte speciali del momento" data-en="The territory's flavour spots, with the special offers of the moment">I luoghi del gusto del territorio, con le proposte speciali del momento</p>
   </div>
 
+  <!-- LA TAVOLOZZA — il racconto dei sapori, prima dei luoghi -->
   <section class="section" style="padding-top: 8px;">
+    <h2 class="subsection-title serif"><span data-it="La" data-en="The">La</span> <em data-it="tavolozza" data-en="palette">tavolozza</em></h2>
+
+    <p class="subsection-intro" data-it="Legumi, miele, tartufo, trota, salumi e formaggi compongono la Tavolozza dei sapori vissani: un percorso di degustazione che racconta Visso attraverso la terra, l'acqua, i pascoli, i boschi e le antiche sapienze produttive della montagna." data-en="Legumes, honey, truffle, trout, cured meats and cheeses make up the Palette of Visso flavours: a tasting journey that tells the story of Visso through its land, water, pastures, woods and the mountain's ancient production wisdom.">Legumi, miele, tartufo, trota, salumi e formaggi compongono la Tavolozza dei sapori vissani: un percorso di degustazione che racconta Visso attraverso la terra, l'acqua, i pascoli, i boschi e le antiche sapienze produttive della montagna.</p>
+
+    <div class="callout" data-it="Domenica pomeriggio la Tavolozza sarà protagonista de «Le Guaite del Gusto, lo spettacolo dei Sibillini». Prenotati su tipicita.it per ricevere la degustazione esclusiva della Tavolozza di Visso." data-en="On Sunday afternoon the Palette takes centre stage at «Le Guaite del Gusto, lo spettacolo dei Sibillini». Book on tipicita.it to receive the exclusive tasting of Visso's Palette.">Domenica pomeriggio la Tavolozza sarà protagonista de «Le Guaite del Gusto, lo spettacolo dei Sibillini». Prenotati su tipicita.it per ricevere la degustazione esclusiva della Tavolozza di Visso.</div>
+
+    {TAVOLOZZA.map((t) => (
+      <div class="tav-detail-card">
+        <img class="tav-detail-icon" src={t.img} alt={t.title_it} loading="lazy" />
+        <div>
+          <div class="tav-detail-tag" data-it={t.tag_it} data-en={t.tag_en}>{t.tag_it}</div>
+          <div class="tav-detail-title" data-it={t.title_it} data-en={t.title_en}>{t.title_it}</div>
+          <div class="tav-detail-text" data-it={t.text_it} data-en={t.text_en}>{t.text_it}</div>
+        </div>
+      </div>
+    ))}
+
+    <a class="book-btn ext" href={TAVOLOZZA_BOOKING_URL} target="_blank" rel="noopener">🎟️ <span data-it="Prenota la degustazione su tipicita.it" data-en="Book the tasting on tipicita.it">Prenota la degustazione su tipicita.it</span></a>
+  </section>
+
+  <!-- I LUOGHI DEL GUSTO — circuiti e POI -->
+  <section class="section" style="padding-top: 8px;">
+    <h2 class="subsection-title serif"><span data-it="I luoghi del" data-en="The places of">I luoghi del</span> <em data-it="gusto" data-en="taste">gusto</em></h2>
+
     <div class="filter-chips">
       <button class="filter-chip active" data-filter="all" data-it="Tutti" data-en="All">Tutti</button>
       {circuits.map((c) => (

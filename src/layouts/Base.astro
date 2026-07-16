@@ -1,5 +1,14 @@
 ---
+import IconHome from '../components/icons/IconHome.astro';
+import IconProgramma from '../components/icons/IconProgramma.astro';
+import IconGusto from '../components/icons/IconGusto.astro';
+import IconMappa from '../components/icons/IconMappa.astro';
+import IconNews from '../components/icons/IconNews.astro';
 const { title = 'La Perla dei Sibillini', description = 'Visso e i Monti Sibillini: eventi, iniziative e sapori del territorio.', active = '' } = Astro.props;
+
+// URL canonico e immagine OG assoluta, basati su `site` (astro.config.mjs)
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/images/hero.png', Astro.site);
 ---
 <!DOCTYPE html>
 <html lang="it">
@@ -39,11 +48,13 @@ const { title = 'La Perla dei Sibillini', description = 'Visso e i Monti Sibilli
 
   <title>{title}</title>
   <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="it_IT" />
+  <meta property="og:url" content={canonical} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
-  <meta property="og:image" content="/images/hero.png" />
+  <meta property="og:image" content={ogImage} />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" type="image/png" href="/images/favicon.png" />
   <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
@@ -81,19 +92,23 @@ const { title = 'La Perla dei Sibillini', description = 'Visso e i Monti Sibilli
 
   <nav class="bottom-nav">
     <a href="/" class={"nav-item" + (active === 'home' ? ' active' : '')}>
-      <span class="nav-icon">⌂</span>
+      <span class="nav-icon"><IconHome /></span>
       <span data-it="Home" data-en="Home">Home</span>
     </a>
     <a href="/programma" class={"nav-item" + (active === 'programma' ? ' active' : '')}>
-      <span class="nav-icon">📅</span>
+      <span class="nav-icon"><IconProgramma /></span>
       <span data-it="Programma" data-en="Schedule">Programma</span>
     </a>
     <a href="/gusto" class={"nav-item" + (active === 'gusto' ? ' active' : '')}>
-      <span class="nav-icon">🍽</span>
+      <span class="nav-icon"><IconGusto /></span>
       <span data-it="Gusto" data-en="Food">Gusto</span>
     </a>
+    <a href="/mappa" class={"nav-item" + (active === 'mappa' ? ' active' : '')}>
+      <span class="nav-icon"><IconMappa /></span>
+      <span data-it="Mappa" data-en="Map">Mappa</span>
+    </a>
     <a href="/news" class={"nav-item" + (active === 'news' ? ' active' : '')}>
-      <span class="nav-icon">📰</span>
+      <span class="nav-icon"><IconNews /></span>
       <span data-it="News" data-en="News">News</span>
     </a>
   </nav>
