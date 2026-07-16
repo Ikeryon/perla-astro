@@ -25,8 +25,7 @@ function swVersion() {
 }
 
 export default defineConfig({
-  // NB: al cutover del dominio va portato a 'https://www.laperladeisibillini.it'
-  // (guida canonical, og:url, sitemap e robots.txt).
-  site: 'https://test.laperladeisibillini.it',
+  // Dominio di produzione (guida canonical, og:url, sitemap e robots.txt).
+  site: 'https://www.laperladeisibillini.it',
   integrations: [sitemap(), swVersion()],
 });
