@@ -4,6 +4,6 @@
     { "source": "/pages/programma.html", "destination": "/programma", "permanent": true },
     { "source": "/pages/gusto.html", "destination": "/gusto", "permanent": true },
     { "source": "/pages/mappa.html", "destination": "/mappa", "permanent": true },
-    { "source": "/pages/tavolozza.html", "destination": "/gusto", "permanent": true }
+    { "source": "/pages/tavolozza.html", "destination": "/", "permanent": true }
   ]
 }

@@ -54,10 +54,22 @@ window.addEventListener('beforeinstallprompt', (e) => {
   deferredPrompt = e;
 });
 
+// evento GA4 (rispetta il Consent Mode: parte solo secondo il consenso dato)
+function track(eventName, params) {
+  if (typeof gtag === 'function') gtag('event', eventName, params || {});
+}
+
+// installazione PWA completata (Android/desktop Chrome)
+window.addEventListener('appinstalled', () => {
+  track('pwa_install');
+});
+
 function installApp() {
+  track('pwa_install_click');
   if (deferredPrompt) {
     deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => {
+    deferredPrompt.userChoice.then((choice) => {
+      track('pwa_install_prompt_' + (choice?.outcome === 'accepted' ? 'accepted' : 'dismissed'));
       deferredPrompt = null;
     });
   } else {

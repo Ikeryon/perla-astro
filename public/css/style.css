@@ -476,6 +476,11 @@ body {
   font-style: italic;
 }
 
+/* ── COOKIEYES: il pulsante di revoca consenso non deve coprire la bottom-nav ── */
+.cky-btn-revisit-wrapper {
+  bottom: 92px !important;
+}
+
 /* ── NEWSLETTER: bannerino + modale ── */
 .nl-banner {
   display: flex;
