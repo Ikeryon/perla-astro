@@ -1,6 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { getArticles, getArticle, assetUrl } from '../../lib/directus.js';
+import { getArticles, getArticle, assetImg, optimizeBodyImages } from '../../lib/directus.js';
 
 export async function getStaticPaths() {
   const articles = await getArticles();
@@ -9,6 +9,9 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 const article = await getArticle(slug);
+// corpo con immagini ottimizzate (webp + resize) per non pesare sulla banda
+const bodyIt = article ? optimizeBodyImages(article.body_it, 1000) : '';
+const bodyEn = article ? optimizeBodyImages(article.body_en || article.body_it, 1000) : '';
 
 function fmtDate(iso) {
   if (!iso) return '';
@@ -33,10 +36,10 @@ function fmtDate(iso) {
         <p style="color:#5b5b5b;font-size:16px;line-height:1.5;margin:0 0 14px" data-it={article.abstract_it} data-en={article.abstract_en || article.abstract_it}>{article.abstract_it}</p>
       )}
       {article.cover_image && (
-        <img src={assetUrl(article.cover_image)} alt="" style="width:100%;border-radius:16px;display:block;margin:0 0 16px" />
+        <img src={assetImg(article.cover_image, 1200)} alt="" style="width:100%;border-radius:16px;display:block;margin:0 0 16px" />
       )}
-      {article.body_it && (
-        <div class="article-body" data-it-html={article.body_it} data-en-html={article.body_en || article.body_it} set:html={article.body_it}></div>
+      {bodyIt && (
+        <div class="article-body" data-it-html={bodyIt} data-en-html={bodyEn} set:html={bodyIt}></div>
       )}
     </article>
   ) : (

@@ -76,6 +76,19 @@ export function getCircuits() {
 // URL di un asset (immagine) di Directus a partire dall'id file
 export const assetUrl = (id) => (id ? `${API}/assets/${id}` : '');
 
+// Versione OTTIMIZZATA (webp + ridimensionata) servita da Directus: riduce ~10x
+// il peso e quindi la banda del PikaPods free. width = larghezza max in px.
+export const assetImg = (id, width = 1000) =>
+  id ? `${API}/assets/${id}?width=${width}&format=webp&quality=80` : '';
+
+// Riscrive le immagini dentro il corpo HTML della news aggiungendo la
+// trasformazione Directus (webp + resize). Gli URL salvati sono "puliti" (niente query).
+const ASSET_RE = /(https:\/\/opalescent-hoatzin\.pikapod\.net\/assets\/[a-f0-9-]+)(?!\?)/gi;
+export function optimizeBodyImages(html, width = 1000) {
+  if (!html) return html;
+  return html.replace(ASSET_RE, `$1?width=${width}&format=webp&quality=80`);
+}
+
 // NEWS — articoli pubblicati destinati a QUESTO sito (Perla).
 // Una news è "di Perla" se il sito principale (home_site) è Perla OPPURE
 // se Perla è tra i target_sites ("esce anche qui"). Filtro per slug del sito.
