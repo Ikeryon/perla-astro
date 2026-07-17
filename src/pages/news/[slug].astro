@@ -24,8 +24,9 @@ function fmtDate(iso) {
     <article class="section" style="padding-top:4px">
       <div style="font-size:12px;font-weight:700;color:#9a6b1f;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px">
         {article.category?.name_it && <span data-it={article.category.name_it} data-en={article.category.name_en || article.category.name_it}>{article.category.name_it}</span>}
-        {article.category?.name_it && article.date_created && <span> · </span>}
-        {article.date_created && <span>{fmtDate(article.date_created)}</span>}
+        {article.category?.name_it && <span> · </span>}
+        <span>{fmtDate(article.publish_at || article.date_created)}</span>
+        {article.author?.name && <span> · <span data-it={`di ${article.author.name}`} data-en={`by ${article.author.name}`}>di {article.author.name}</span></span>}
       </div>
       <h1 class="serif" style="color:#5A1F1B;font-size:26px;line-height:1.15;margin:0 0 10px" data-it={article.title_it} data-en={article.title_en || article.title_it}>{article.title_it}</h1>
       {article.abstract_it && (
@@ -43,6 +44,48 @@ function fmtDate(iso) {
       <p class="section-sub" data-it="Notizia non trovata." data-en="Article not found.">Notizia non trovata.</p>
     </section>
   )}
+
+  <style is:global>
+    /* ---- corpo news: tipografia + blocchi ricchi dal wizard Studio ---- */
+    .article-body{font-size:16px;line-height:1.75;color:#333}
+    .article-body > *:first-child{margin-top:0}
+    .article-body p{margin:0 0 1em}
+    .article-body h2{font-family:Georgia,'Times New Roman',serif;color:#5A1F1B;font-size:1.5em;line-height:1.2;margin:1.4em 0 .4em;clear:both}
+    .article-body h3{font-family:Georgia,'Times New Roman',serif;color:#5A1F1B;font-size:1.2em;margin:1.2em 0 .3em;clear:both}
+    .article-body ul,.article-body ol{padding-left:1.4em;margin:0 0 1em}
+    .article-body li{margin:.2em 0}
+    .article-body a{color:#9a6b1f;text-decoration:underline}
+    .article-body blockquote{border-left:3px solid #C99A3A;margin:1.2em 0;padding:.2em 0 .2em 1em;color:#6b5b4b;font-style:italic}
+    .article-body mark{background:#FCE9A8;padding:.05em .15em;border-radius:3px}
+    .article-body img{max-width:100%;height:auto;border-radius:12px;display:block}
+    .article-body::after{content:"";display:block;clear:both}
+
+    /* immagine con didascalia + allineamento (testo che scorre a fianco) */
+    .article-body figure[data-type="figure-image"]{margin:1.4em 0}
+    .article-body figure[data-type="figure-image"] figcaption{font-size:13px;color:#8a7d6f;text-align:center;margin-top:6px}
+    .article-body figure[data-align="left"]{float:left;width:min(48%,360px);margin:.2em 1.4em .6em 0}
+    .article-body figure[data-align="right"]{float:right;width:min(48%,360px);margin:.2em 0 .6em 1.4em}
+    .article-body figure[data-align="center"]{clear:both;width:min(80%,600px);margin:1.4em auto}
+    .article-body figure[data-align="full"]{clear:both;width:100%;margin:1.4em 0}
+    @media(max-width:560px){
+      .article-body figure[data-align="left"],.article-body figure[data-align="right"]{float:none;width:100%;margin:1.4em 0}
+    }
+
+    /* galleria di foto */
+    .article-body div[data-type="gallery"]{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:1.4em 0;clear:both}
+    .article-body div[data-type="gallery"] figure{margin:0}
+    .article-body div[data-type="gallery"] img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px}
+
+    /* box "in evidenza" */
+    .article-body div[data-type="callout"]{--c:#3B7DD8;--bg:#EEF3FC;border-left:4px solid var(--c);background:var(--bg);border-radius:10px;padding:14px 16px 4px;margin:1.4em 0;clear:both}
+    .article-body div[data-variant="warning"]{--c:#C9891B;--bg:#FCF3E1}
+    .article-body div[data-variant="tip"]{--c:#2f7d47;--bg:#E6F4EA}
+    .article-body div[data-type="callout"] > *:last-child{margin-bottom:.6em}
+
+    /* video / embed */
+    .article-body [data-youtube-video]{margin:1.4em 0;clear:both}
+    .article-body [data-youtube-video] iframe{width:100%;aspect-ratio:16/9;height:auto;border:0;border-radius:12px;display:block}
+  </style>
 
   <script is:inline>
     // Applica la lingua anche al corpo HTML (body_it / body_en) al cambio IT/EN.

@@ -29,8 +29,8 @@ function fmtDate(iso) {
         <div style="padding:14px 16px">
           <div style="font-size:12px;font-weight:700;color:#9a6b1f;text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px">
             {a.category?.name_it && <span data-it={a.category.name_it} data-en={a.category.name_en || a.category.name_it}>{a.category.name_it}</span>}
-            {a.category?.name_it && a.date_created && <span> · </span>}
-            {a.date_created && <span>{fmtDate(a.date_created)}</span>}
+            {a.category?.name_it && <span> · </span>}
+            <span>{fmtDate(a.publish_at || a.date_created)}</span>
           </div>
           <div class="serif" style="font-size:19px;color:#5A1F1B;font-weight:700;line-height:1.2" data-it={a.title_it} data-en={a.title_en || a.title_it}>{a.title_it}</div>
           {a.abstract_it && (

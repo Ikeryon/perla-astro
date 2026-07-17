@@ -76,14 +76,21 @@ export function getCircuits() {
 // URL di un asset (immagine) di Directus a partire dall'id file
 export const assetUrl = (id) => (id ? `${API}/assets/${id}` : '');
 
-// NEWS — articoli pubblicati (i più recenti prima).
-// Nota: relazioni (home_site, category, author, target_sites) verranno aggiunte in un secondo momento;
-// per ora si mostrano tutti gli articoli pubblicati. Le pagine gestiscono già l'assenza di categoria.
+// NEWS — articoli pubblicati destinati a QUESTO sito (Perla).
+// Una news è "di Perla" se il sito principale (home_site) è Perla OPPURE
+// se Perla è tra i target_sites ("esce anche qui"). Filtro per slug del sito.
+const PERLA_SLUG = 'la-perla-dei-sibillini';
+
 export function getArticles() {
   return dGet(
     `/items/articles?filter[status][_eq]=published` +
-    `&sort=-date_created&limit=-1` +
-    `&fields=id,title_it,title_en,slug,abstract_it,abstract_en,date_created`
+    `&filter[_or][0][home_site][slug][_eq]=${PERLA_SLUG}` +
+    `&filter[_or][1][target_sites][sites_id][slug][_eq]=${PERLA_SLUG}` +
+    // legacy: news senza sito assegnato = di Perla (era l'unico sito con le news)
+    `&filter[_or][2][home_site][_null]=true` +
+    `&sort=-publish_at,-date_created&limit=-1` +
+    `&fields=id,title_it,title_en,slug,abstract_it,abstract_en,date_created,publish_at,` +
+    `cover_image,category.name_it,category.name_en`
   );
 }
 
@@ -91,7 +98,8 @@ export async function getArticle(slug) {
   const rows = await dGet(
     `/items/articles?filter[slug][_eq]=${encodeURIComponent(slug)}` +
     `&filter[status][_eq]=published&limit=1` +
-    `&fields=id,title_it,title_en,slug,abstract_it,abstract_en,body_it,body_en,date_created`
+    `&fields=id,title_it,title_en,slug,abstract_it,abstract_en,body_it,body_en,date_created,publish_at,` +
+    `cover_image,category.name_it,category.name_en,author.name`
   );
   return (rows && rows[0]) || null;
 }
