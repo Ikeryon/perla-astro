@@ -87,6 +87,48 @@ const ogImage = new URL('/images/hero.png', Astro.site);
 
   <slot />
 
+  <!-- Attiva notifiche push (discreto) -->
+  <div class="push-optin" id="pushOptin" hidden>
+    <button id="pushBtn" type="button">🔔 <span data-it="Attiva le notifiche" data-en="Enable notifications">Attiva le notifiche</span></button>
+    <span class="push-msg" id="pushMsg"></span>
+  </div>
+  <style>
+    .push-optin{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin:26px auto 0;padding:0 16px}
+    .push-optin button{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #E4D9CE;color:#5A1F1B;font:inherit;font-weight:700;font-size:14px;padding:10px 18px;border-radius:99px;cursor:pointer}
+    .push-optin button:hover{border-color:#5A1F1B}
+    .push-optin button.on{background:#EAF3EC;border-color:#8FBF9E;color:#2f7d47;cursor:default}
+    .push-msg{font-size:13px;color:#8a7d6f}
+  </style>
+  <script is:inline>
+    (function(){
+      var VAPID='BILnaOJSbzJPCBwg0jOgQAHPtB5c_LmV8TtKKjkcbDHQWh4I7D9SgeGxcLTsxEdQcRIyNslIHih_RvuiXNObIVY';
+      var SUBSCRIBE='https://studio.anigami.eu/api/subscribe';
+      var SITE='la-perla-dei-sibillini';
+      var bar=document.getElementById('pushOptin'), btn=document.getElementById('pushBtn'), msg=document.getElementById('pushMsg');
+      if(!bar || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
+      bar.hidden=false;
+      try{ navigator.serviceWorker.register('/sw.js'); }catch(e){}
+      function lang(){ var a=document.querySelector('.lang-switch .active'); return (a && /en/i.test(a.textContent))?'en':'it'; }
+      function label(t){ btn.querySelector('span').textContent=t; }
+      function setActive(){ btn.classList.add('on'); label(lang()==='en'?'Notifications on ✓':'Notifiche attive ✓'); }
+      function u8(b){ var pad='='.repeat((4-b.length%4)%4), s=(b+pad).replace(/-/g,'+').replace(/_/g,'/'), raw=atob(s), a=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i); return a; }
+      navigator.serviceWorker.ready.then(function(reg){ return reg.pushManager.getSubscription(); }).then(function(s){ if(s) setActive(); }).catch(function(){});
+      btn.addEventListener('click', function(){
+        if(btn.classList.contains('on')) return;
+        msg.textContent='';
+        if(Notification.permission==='denied'){ msg.textContent=lang()==='en'?'Blocked in browser settings':'Bloccate nelle impostazioni del browser'; return; }
+        Notification.requestPermission().then(function(perm){
+          if(perm!=='granted'){ msg.textContent=lang()==='en'?'Permission not granted':'Permesso non concesso'; return; }
+          navigator.serviceWorker.ready
+            .then(function(reg){ return reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:u8(VAPID) }); })
+            .then(function(sub){ var j=sub.toJSON(); return fetch(SUBSCRIBE,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ subscription:{ endpoint:j.endpoint, keys:j.keys }, site:SITE, lang:lang() }) }); })
+            .then(function(r){ if(!r.ok) throw new Error('server'); setActive(); })
+            .catch(function(){ msg.textContent=lang()==='en'?'Something went wrong, try again':'Qualcosa è andato storto, riprova'; });
+        });
+      });
+    })();
+  </script>
+
   <Newsletter />
 
   <div class="mobile-footer">
