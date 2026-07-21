@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getEdition, getProgramme, getCircuits, getArticles } from '../lib/directus.js';
+import { getEdition, getProgramme, getCircuits, getArticles, getPlaces } from '../lib/directus.js';
 
 // LA TAVOLOZZA — intro editoriale della sezione gusto (contenuto stabile nel codice).
 const TAVOLOZZA_BOOKING_URL = 'https://tipicita.it/dettaglio_attivita.php?idAttivita=959';
@@ -54,9 +54,14 @@ const programme = await getProgramme();
 const circuits = await getCircuits();
 const preview = programme.slice(0, 3);
 
-// ultima news pubblicata (le news sono ordinate dalla più recente)
+// news: la prima è l'apertura, le successive due riempiono la riga (solo desktop)
 const articles = await getArticles();
 const latestNews = articles[0] || null;
+const altreNews = articles.slice(1, 3);
+
+// POI per il modulo laterale del desktop: si stampano tutti e il browser
+// ne mostra 3 a caso a ogni visita (così cambiano davvero, non solo a ogni build)
+const places = await getPlaces();
 
 function fmtDate(iso) {
   if (!iso) return '';
@@ -110,24 +115,48 @@ const range = dateRange(edition);
     <a href="/mappa" class="cta-btn" data-it="📍 Mappa" data-en="📍 Map">📍 Mappa</a>
   </nav>
 
-  {preview.length > 0 && (
-    <section class="section con-appuntamenti">
-      <h2 class="serif"><span data-it="Il programma" data-en="The programme">Il programma</span></h2>
-      <p class="section-sub" data-it="Alcuni appuntamenti da vivere" data-en="A few highlights to experience">Alcuni appuntamenti da vivere</p>
+  {/* RAIL — su desktop diventa la colonna di destra: moduli impilati, se uno
+      sparisce la colonna si accorcia e il resto non si muove. Su mobile è
+      trasparente (i figli scorrono nel flusso come prima). */}
+  <div class="rail">
+    {preview.length > 0 && (
+      <section class="section con-appuntamenti">
+        <h2 class="serif"><span data-it="Il programma" data-en="The programme">Il programma</span></h2>
+        <p class="section-sub" data-it="Alcuni appuntamenti da vivere" data-en="A few highlights to experience">Alcuni appuntamenti da vivere</p>
 
-      {preview.map((it) => (
-        <div class="day-card">
-          {it.abstract_it && <div class="day-label" data-it={it.abstract_it} data-en={it.abstract_en}>{it.abstract_it}</div>}
-          <div class="day-title serif" data-it={it.title_it} data-en={it.title_en}>{it.title_it}</div>
+        {preview.map((it) => (
+          <div class="day-card">
+            {it.abstract_it && <div class="day-label" data-it={it.abstract_it} data-en={it.abstract_en}>{it.abstract_it}</div>}
+            <div class="day-title serif" data-it={it.title_it} data-en={it.title_en}>{it.title_it}</div>
+          </div>
+        ))}
+
+        <a href="/programma" class="see-all" data-it="Vedi tutto il programma →" data-en="See full programme →">Vedi tutto il programma →</a>
+      </section>
+    )}
+
+    {/* MODULO LUOGHI — solo desktop: 3 POI estratti a caso dal browser */}
+    {places.length > 0 && (
+      <section class="section poi-modulo">
+        <h2 class="serif"><span data-it="I luoghi del gusto" data-en="The places of taste">I luoghi del gusto</span></h2>
+        <div id="poiPick">
+          {places.map((pl) => (
+            <div class="poi-voce" hidden>
+              <div class="poi-voce-nome serif">{pl.name}</div>
+              <div class="poi-voce-meta">{[pl.place_type, pl.city].filter(Boolean).join(' · ')}</div>
+              {pl.description_it && (
+                <p class="poi-voce-desc" data-it={pl.description_it} data-en={pl.description_en || pl.description_it}>{pl.description_it}</p>
+              )}
+            </div>
+          ))}
         </div>
-      ))}
-
-      <a href="/programma" class="see-all" data-it="Vedi tutto il programma →" data-en="See full programme →">Vedi tutto il programma →</a>
-    </section>
-  )}
+        <a href="/gusto" class="see-all" data-it="Vedi tutti i luoghi →" data-en="See all the places →">Vedi tutti i luoghi →</a>
+      </section>
+    )}
+  </div>
 
   <!-- LA TAVOLOZZA — il racconto dei sapori, intro alla sezione gusto -->
-  <section class="section">
+  <section class="section tav-home">
     <h2 class="serif"><span data-it="La tavolozza" data-en="The palette">La tavolozza</span></h2>
     <p class="section-sub" data-it="I sapori vissani, tra terra, acqua, pascoli e boschi" data-en="The flavours of Visso, between land, water, pastures and woods">I sapori vissani, tra terra, acqua, pascoli e boschi</p>
 
@@ -135,16 +164,18 @@ const range = dateRange(edition);
 
     <div class="callout" data-it="Domenica pomeriggio la Tavolozza sarà protagonista de «Le Guaite del Gusto, lo spettacolo dei Sibillini». Prenotati su tipicita.it per ricevere la degustazione esclusiva della Tavolozza di Visso." data-en="On Sunday afternoon the Palette takes centre stage at «Le Guaite del Gusto, lo spettacolo dei Sibillini». Book on tipicita.it to receive the exclusive tasting of Visso's Palette.">Domenica pomeriggio la Tavolozza sarà protagonista de «Le Guaite del Gusto, lo spettacolo dei Sibillini». Prenotati su tipicita.it per ricevere la degustazione esclusiva della Tavolozza di Visso.</div>
 
-    {TAVOLOZZA.map((t) => (
-      <div class="tav-detail-card">
-        <img class="tav-detail-icon" src={t.img} alt={t.title_it} loading="lazy" />
-        <div>
-          <div class="tav-detail-tag" data-it={t.tag_it} data-en={t.tag_en}>{t.tag_it}</div>
-          <div class="tav-detail-title" data-it={t.title_it} data-en={t.title_en}>{t.title_it}</div>
-          <div class="tav-detail-text" data-it={t.text_it} data-en={t.text_en}>{t.text_it}</div>
+    <div class="tav-cards">
+      {TAVOLOZZA.map((t) => (
+        <div class="tav-detail-card">
+          <img class="tav-detail-icon" src={t.img} alt={t.title_it} loading="lazy" />
+          <div>
+            <div class="tav-detail-tag" data-it={t.tag_it} data-en={t.tag_en}>{t.tag_it}</div>
+            <div class="tav-detail-title" data-it={t.title_it} data-en={t.title_en}>{t.title_it}</div>
+            <div class="tav-detail-text" data-it={t.text_it} data-en={t.text_en}>{t.text_it}</div>
+          </div>
         </div>
-      </div>
-    ))}
+      ))}
+    </div>
 
     <a class="book-btn ext" href={TAVOLOZZA_BOOKING_URL} target="_blank" rel="noopener">🎟️ <span data-it="Prenota la degustazione su tipicita.it" data-en="Book the tasting on tipicita.it">Prenota la degustazione su tipicita.it</span></a>
 
@@ -156,7 +187,7 @@ const range = dateRange(edition);
   </section>
 
   {latestNews && (
-    <section class="section">
+    <section class="section news-home">
       <h2 class="serif"><span data-it="Dalle news" data-en="From the news">Dalle news</span></h2>
       <p class="section-sub" data-it="L'ultima notizia dal territorio" data-en="The latest news from the territory">L'ultima notizia dal territorio</p>
 
@@ -173,7 +204,36 @@ const range = dateRange(edition);
         </div>
       </a>
 
-      <a href="/news" class="see-all" data-it="Leggi tutte le news →" data-en="Read all the news →">Leggi tutte le news →</a>
+      {/* Le altre due notizie affiancano l'apertura: compaiono solo su desktop */}
+      {altreNews.length > 0 && (
+        <div class="news-secondarie">
+          {altreNews.map((a) => (
+            <a class="news-mini" href={`/news/${a.slug}`}>
+              {a.date_created && <div class="news-mini-data">{fmtDate(a.date_created)}</div>}
+              <div class="news-mini-titolo serif" data-it={a.title_it} data-en={a.title_en || a.title_it}>{a.title_it}</div>
+              {a.abstract_it && (
+                <p class="news-mini-testo" data-it={a.abstract_it} data-en={a.abstract_en || a.abstract_it}>{a.abstract_it}</p>
+              )}
+            </a>
+          ))}
+        </div>
+      )}
+
+      <a href="/news" class="see-all" data-it="Vedi tutte le news →" data-en="See all the news →">Vedi tutte le news →</a>
     </section>
   )}
+
+  <script is:inline>
+    // Mostra 3 luoghi a caso a ogni visita (sono tutti già nella pagina, nascosti).
+    (function () {
+      var box = document.getElementById('poiPick');
+      if (!box) return;
+      var voci = Array.prototype.slice.call(box.querySelectorAll('.poi-voce'));
+      for (var i = voci.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = voci[i]; voci[i] = voci[j]; voci[j] = t;
+      }
+      voci.slice(0, 3).forEach(function (el) { el.hidden = false; });
+    })();
+  </script>
 </Base>

@@ -107,7 +107,10 @@ const appuntamenti = (await hasAppuntamenti()) ? 'si' : 'no';
     <button onclick="installApp()" data-it="Installa" data-en="Install">Installa</button>
   </div>
 
-  <slot />
+  {/* Contenitore del contenuto: su desktop diventa la griglia a due colonne */}
+  <main class="contenuto">
+    <slot />
+  </main>
 
   <!-- Attiva notifiche push (discreto) -->
   <div class="push-optin" id="pushOptin" hidden>
