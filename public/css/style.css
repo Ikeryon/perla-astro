@@ -476,6 +476,22 @@ body {
   font-style: italic;
 }
 
+/* wordmark della home fuori stagione (al posto del logotype dell'evento) */
+.hero-wordmark {
+  font-size: 40px;
+  line-height: 1.05;
+  color: var(--maroon);
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ── STAGIONI ──
+   "in" = edizione in corso o in arrivo · "out" = nessun evento in programma.
+   I blocchi legati all'evento (programma, date, logotype) si mostrano solo in stagione. */
+html[data-season="out"] .season-in { display: none !important; }
+html[data-season="in"] .season-out { display: none !important; }
+
 /* ── COOKIEYES: il pulsante di revoca consenso non deve coprire la bottom-nav ── */
 .cky-btn-revisit-wrapper {
   bottom: 92px !important;

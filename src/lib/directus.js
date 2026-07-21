@@ -25,20 +25,46 @@ async function dGet(path) {
   return json.data;
 }
 
-const ED = 1; // edizione "Le Guaite del Gusto 2026"
+const ED = 1; // edizione storica "Le Guaite del Gusto 2026" (fallback per Gusto)
 
-// Edizione (hero della home / programma)
-export function getEdition() {
-  return dGet(
-    `/items/editions/${ED}?fields=id,title_it,title_en,subtitle_it,subtitle_en,` +
+// Data di oggi (fuso italiano) come 'YYYY-MM-DD', per confronti con start/end_date.
+export function todayISO() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+}
+
+// EDIZIONE CORRENTE: la prima ancora in corso o futura; se non ce n'è, la più recente.
+// Così quando la redazione carica una nuova edizione il sito la prende da solo,
+// e quando l'ultima è finita il frontend lo sa (→ modalità "fuori stagione").
+let _edition;
+export async function getEdition() {
+  if (_edition !== undefined) return _edition;
+  const rows = await dGet(
+    `/items/editions?sort=start_date&limit=-1` +
+    `&fields=id,status,title_it,title_en,subtitle_it,subtitle_en,` +
     `abstract_it,abstract_en,start_date,end_date`
   );
+  const published = (rows || []).filter((e) => !e.status || e.status === 'published');
+  const today = todayISO();
+  _edition =
+    published.find((e) => (e.end_date || e.start_date) >= today) ||
+    published[published.length - 1] ||
+    null;
+  return _edition;
+}
+
+// true se l'edizione corrente non è ancora finita (evento in corso o in arrivo)
+export async function isInSeason() {
+  const ed = await getEdition();
+  const end = ed?.end_date || ed?.start_date;
+  return Boolean(end) && end >= todayISO();
 }
 
 // Iniziative del PROGRAMMA (senza circuito) — gli appuntamenti "a orario"
-export function getProgramme() {
+export async function getProgramme() {
+  const ed = await getEdition();
+  if (!ed) return [];
   return dGet(
-    `/items/initiatives?filter[edition][_eq]=${ED}` +
+    `/items/initiatives?filter[edition][_eq]=${ed.id}` +
     `&filter[circuit][_null]=true&filter[status][_eq]=published&sort=sort` +
     `&fields=id,title_it,title_en,abstract_it,abstract_en,description_it,description_en,` +
     `price_info,booking_url,is_featured`
