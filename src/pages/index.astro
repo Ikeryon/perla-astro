@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getEdition, getProgramme, getCircuits, getArticles, isInSeason } from '../lib/directus.js';
+import { getEdition, getProgramme, getCircuits, getArticles } from '../lib/directus.js';
 
 // LA TAVOLOZZA — intro editoriale della sezione gusto (contenuto stabile nel codice).
 const TAVOLOZZA_BOOKING_URL = 'https://tipicita.it/dettaglio_attivita.php?idAttivita=959';
@@ -54,8 +54,6 @@ const programme = await getProgramme();
 const circuits = await getCircuits();
 const preview = programme.slice(0, 3);
 
-const inSeason = await isInSeason();
-
 // ultima news pubblicata (le news sono ordinate dalla più recente)
 const articles = await getArticles();
 const latestNews = articles[0] || null;
@@ -77,43 +75,43 @@ function dateRange(ed) {
 }
 const range = dateRange(edition);
 ---
-<Base title={inSeason ? (edition?.title_it || 'La Perla dei Sibillini') : 'La Perla dei Sibillini'} description={inSeason ? edition?.abstract_it : 'Visso e i Monti Sibillini: notizie, luoghi del gusto e iniziative del territorio.'} active="home">
+<Base title="La Perla dei Sibillini" description="Visso e i Monti Sibillini: notizie, luoghi del gusto e iniziative del territorio." active="home">
+  {/* L'identità del sito non cambia mai: Perla è la piattaforma della community
+      di Visso, non il sito di un evento. Gli eventi sono ospiti in evidenza. */}
   <section class="hero">
     <img class="hero-swirl" src="/images/g-swirl.png" alt="" />
-    <a href="https://tipicita.it/esperienze.php" target="_blank" rel="noopener" class="season-in">
-      <img class="grand-tour-badge" src="/images/grand-tour-badge.png" alt="Grand Tour delle Marche · Tappa Ufficiale" />
-    </a>
     <div class="hero-content">
-      {/* IN STAGIONE: l'evento è il protagonista */}
-      <div class="season-in">
-        <p class="hero-dates">{range}</p>
-        <p class="hero-presents" data-it="La perla dei Sibillini presenta" data-en="La perla dei Sibillini presents">La perla dei Sibillini presenta</p>
-        <h1 class="hero-logotype-wrap">
-          <img class="hero-logotype" src="/images/logotype.png" alt={edition?.title_it} />
-        </h1>
-        {edition?.subtitle_it && (
-          <p class="hero-sub" data-it={edition.subtitle_it} data-en={edition.subtitle_en}>{edition.subtitle_it}</p>
-        )}
-      </div>
-
-      {/* FUORI STAGIONE: torna in primo piano l'identità del luogo */}
-      <div class="season-out">
-        <h1 class="hero-wordmark serif">La perla dei Sibillini</h1>
-      </div>
+      <h1 class="hero-wordmark serif">La perla dei Sibillini</h1>
+      <p class="hero-sub" data-it="Visso e i Monti Sibillini: notizie, sapori e iniziative del territorio." data-en="Visso and the Sibillini Mountains: news, flavours and local initiatives.">Visso e i Monti Sibillini: notizie, sapori e iniziative del territorio.</p>
     </div>
     <div class="hero-photo-wrap">
       <img class="hero-photo" src="/images/hero.png" alt="Visso" />
     </div>
   </section>
 
+  {/* IN EVIDENZA: l'evento in corso o in arrivo, finché c'è */}
+  {edition && (
+    <section class="section evidenza con-appuntamenti">
+      <div class="evidenza-box">
+        <div class="evidenza-kicker" data-it="In evidenza" data-en="Highlight">In evidenza</div>
+        <div class="evidenza-title serif">{edition.title_it}</div>
+        {range && <div class="evidenza-when">{range}</div>}
+        {edition.subtitle_it && (
+          <p class="evidenza-sub" data-it={edition.subtitle_it} data-en={edition.subtitle_en}>{edition.subtitle_it}</p>
+        )}
+        <a href="/programma" class="evidenza-cta" data-it="Scopri il programma →" data-en="See the programme →">Scopri il programma →</a>
+      </div>
+    </section>
+  )}
+
   <nav class="cta-row">
-    <a href="/programma" class="cta-btn primary season-in" data-it="📅 Programma" data-en="📅 Schedule">📅 Programma</a>
+    <a href="/programma" class="cta-btn primary con-appuntamenti" data-it="📅 Programma" data-en="📅 Schedule">📅 Programma</a>
     <a href="/gusto" class="cta-btn" data-it="🍽️ Gusto" data-en="🍽️ Food">🍽️ Gusto</a>
-    <a href="/mappa" class="cta-btn season-out" data-it="📍 Mappa" data-en="📍 Map">📍 Mappa</a>
+    <a href="/mappa" class="cta-btn" data-it="📍 Mappa" data-en="📍 Map">📍 Mappa</a>
   </nav>
 
   {preview.length > 0 && (
-    <section class="section season-in">
+    <section class="section con-appuntamenti">
       <h2 class="serif"><span data-it="Il programma" data-en="The programme">Il programma</span></h2>
       <p class="section-sub" data-it="Alcuni appuntamenti da vivere" data-en="A few highlights to experience">Alcuni appuntamenti da vivere</p>
 

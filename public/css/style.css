@@ -486,11 +486,48 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* ── STAGIONI ──
-   "in" = edizione in corso o in arrivo · "out" = nessun evento in programma.
-   I blocchi legati all'evento (programma, date, logotype) si mostrano solo in stagione. */
-html[data-season="out"] .season-in { display: none !important; }
-html[data-season="in"] .season-out { display: none !important; }
+/* ── APPUNTAMENTI ──
+   Il sito è sempre attivo: l'unica cosa che va e viene è il programma.
+   Gli elementi .con-appuntamenti compaiono solo quando ci sono appuntamenti,
+   .senza-appuntamenti solo quando non ce ne sono. */
+html[data-appuntamenti="no"] .con-appuntamenti { display: none !important; }
+html[data-appuntamenti="si"] .senza-appuntamenti { display: none !important; }
+
+/* ── IN EVIDENZA: l'evento in corso, ospite della home ── */
+.evidenza-box {
+  background: var(--maroon);
+  color: var(--cream);
+  border-radius: 18px;
+  padding: 20px 22px;
+}
+.evidenza-kicker {
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  opacity: 0.75;
+}
+.evidenza-title { font-size: 25px; line-height: 1.15; font-weight: 700; margin-top: 6px; }
+.evidenza-when {
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  opacity: 0.85;
+  margin-top: 6px;
+}
+.evidenza-sub { font-size: 14px; line-height: 1.55; opacity: 0.85; margin: 10px 0 0; }
+.evidenza-cta {
+  display: inline-block;
+  margin-top: 14px;
+  background: var(--cream);
+  color: var(--maroon);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 11px 22px;
+  border-radius: 24px;
+}
 
 /* ── COOKIEYES: il pulsante di revoca consenso non deve coprire la bottom-nav ── */
 .cky-btn-revisit-wrapper {

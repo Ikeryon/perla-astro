@@ -39,12 +39,12 @@ const eventLd = edition && {
 
   {/* Fuori stagione la voce sparisce dal menù, ma la pagina resta raggiungibile
       (vecchi link, motori di ricerca): meglio un messaggio che un vicolo cieco. */}
-  <section class="section season-out" style="padding-top: 8px;">
+  <section class="section senza-appuntamenti" style="padding-top: 8px;">
     <div class="callout" data-it="Al momento non ci sono appuntamenti in programma. Torna presto: il calendario si riempie a ogni nuova iniziativa del territorio." data-en="There are no scheduled events at the moment. Come back soon: the calendar fills up with every new local initiative.">Al momento non ci sono appuntamenti in programma. Torna presto: il calendario si riempie a ogni nuova iniziativa del territorio.</div>
     <a href="/news" class="see-all" data-it="Intanto leggi le news →" data-en="Meanwhile, read the news →">Intanto leggi le news →</a>
   </section>
 
-  <section class="section season-in" style="padding-top: 8px;">
+  <section class="section con-appuntamenti" style="padding-top: 8px;">
     {items.map((it) => (
       <div class="day-card">
         {it.abstract_it && (

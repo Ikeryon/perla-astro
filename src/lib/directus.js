@@ -74,11 +74,15 @@ export async function getEdition() {
   return _edition;
 }
 
-// true se l'edizione corrente non è ancora finita (evento in corso o in arrivo)
-export async function isInSeason() {
+// Ci sono appuntamenti da mostrare?
+// Il sito è SEMPRE attivo (Perla è la piattaforma della community, non il sito di
+// un evento): l'unica cosa che va e viene è il programma. Oggi la risposta si
+// ricava dalla fine dell'edizione corrente, perché le singole iniziative non
+// hanno un campo data; con le `occurrences` diventerà precisa al singolo appuntamento.
+export async function hasAppuntamenti() {
   const ed = await getEdition();
   const end = ed?.end_date || ed?.start_date;
-  return Boolean(end) && end >= todayISO();
+  return Boolean(end) && String(end).slice(0, 10) >= todayISO();
 }
 
 // Iniziative del PROGRAMMA (senza circuito) — gli appuntamenti "a orario"

@@ -1,6 +1,6 @@
 ---
 import Newsletter from '../components/Newsletter.astro';
-import { getEdition, isInSeason } from '../lib/directus.js';
+import { getEdition, hasAppuntamenti } from '../lib/directus.js';
 import IconHome from '../components/icons/IconHome.astro';
 import IconProgramma from '../components/icons/IconProgramma.astro';
 import IconGusto from '../components/icons/IconGusto.astro';
@@ -12,29 +12,28 @@ const { title = 'La Perla dei Sibillini', description = 'Visso e i Monti Sibilli
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL('/images/hero.png', Astro.site);
 
-// STAGIONE: "in" se l'edizione corrente non è ancora finita, "out" altrimenti.
-// Calcolata in build e ri-verificata lato client (il sito è statico: così il giorno
-// dopo la fine dell'evento cambia da solo, anche senza un nuovo deploy).
+// APPUNTAMENTI: il sito è sempre attivo; va e viene solo il programma.
+// Calcolato in build e ri-verificato lato client (il sito è statico: così il giorno
+// dopo l'ultimo appuntamento il programma sparisce da solo, senza un nuovo deploy).
 const edition = await getEdition();
-const seasonEnd = edition?.end_date || edition?.start_date || '';
-const season = (await isInSeason()) ? 'in' : 'out';
+const finoAl = String(edition?.end_date || edition?.start_date || '').slice(0, 10);
+const appuntamenti = (await hasAppuntamenti()) ? 'si' : 'no';
 ---
 <!DOCTYPE html>
-<html lang="it" data-season={season}>
+<html lang="it" data-appuntamenti={appuntamenti}>
 <head>
   <meta charset="UTF-8" />
 
-  <!-- Ricalcola la stagione nel browser: il sito è statico, così non resta
-       "in evento" se non viene rigenerato subito dopo la fine dell'edizione. -->
-  <script is:inline define:vars={{ seasonEnd }}>
+  <!-- Ricontrolla nel browser se ci sono ancora appuntamenti: il sito è statico,
+       così il programma sparisce da solo anche senza un nuovo deploy. -->
+  <script is:inline define:vars={{ finoAl }}>
     (function () {
       try {
-        if (!seasonEnd) return;
-        // end_date può arrivare come '2026-07-19' o '2026-07-19T00:00:00': si usa solo la parte data.
-        var fine = new Date(String(seasonEnd).slice(0, 10) + 'T23:59:59');
-        // se per qualsiasi motivo la data non è valida, si tiene il valore calcolato in build
+        if (!finoAl) return;
+        var fine = new Date(finoAl + 'T23:59:59');
+        // se la data non è valida si tiene il valore calcolato in build
         if (isNaN(fine.getTime())) return;
-        document.documentElement.setAttribute('data-season', fine < new Date() ? 'out' : 'in');
+        document.documentElement.setAttribute('data-appuntamenti', fine < new Date() ? 'no' : 'si');
       } catch (e) {}
     })();
   </script>
@@ -165,7 +164,7 @@ const season = (await isInSeason()) ? 'in' : 'out';
       <span class="nav-icon"><IconHome /></span>
       <span data-it="Home" data-en="Home">Home</span>
     </a>
-    <a href="/programma" class={"nav-item season-in" + (active === 'programma' ? ' active' : '')}>
+    <a href="/programma" class={"nav-item con-appuntamenti" + (active === 'programma' ? ' active' : '')}>
       <span class="nav-icon"><IconProgramma /></span>
       <span data-it="Programma" data-en="Schedule">Programma</span>
     </a>
