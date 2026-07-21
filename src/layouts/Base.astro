@@ -30,7 +30,10 @@ const season = (await isInSeason()) ? 'in' : 'out';
     (function () {
       try {
         if (!seasonEnd) return;
-        var fine = new Date(seasonEnd + 'T23:59:59');
+        // end_date può arrivare come '2026-07-19' o '2026-07-19T00:00:00': si usa solo la parte data.
+        var fine = new Date(String(seasonEnd).slice(0, 10) + 'T23:59:59');
+        // se per qualsiasi motivo la data non è valida, si tiene il valore calcolato in build
+        if (isNaN(fine.getTime())) return;
         document.documentElement.setAttribute('data-season', fine < new Date() ? 'out' : 'in');
       } catch (e) {}
     })();
