@@ -35,14 +35,36 @@ export function todayISO() {
 // EDIZIONE CORRENTE: la prima ancora in corso o futura; se non ce n'è, la più recente.
 // Così quando la redazione carica una nuova edizione il sito la prende da solo,
 // e quando l'ultima è finita il frontend lo sa (→ modalità "fuori stagione").
+const SITE = 'la-perla-dei-sibillini';
+const ED_FIELDS =
+  'id,status,title_it,title_en,subtitle_it,subtitle_en,abstract_it,abstract_en,start_date,end_date';
+
 let _edition;
 export async function getEdition() {
   if (_edition !== undefined) return _edition;
-  const rows = await dGet(
-    `/items/editions?sort=start_date&limit=-1` +
-    `&fields=id,status,title_it,title_en,subtitle_it,subtitle_en,` +
-    `abstract_it,abstract_en,start_date,end_date`
-  );
+
+  // IMPORTANTE: il backend è multi-sito (Perla, EVO, …) → si prendono SOLO le
+  // edizioni degli eventi di Perla, altrimenti si pescherebbe l'edizione di un altro brand.
+  let rows = [];
+  try {
+    rows = await dGet(
+      `/items/editions?filter[event][home_site][slug][_eq]=${SITE}` +
+      `&sort=start_date&limit=-1&fields=${ED_FIELDS}`
+    );
+  } catch (e) {
+    rows = [];
+  }
+  // Rete di sicurezza: se il filtro per sito non è percorribile, si torna
+  // all'edizione storica di Perla invece di rischiare contenuti di altri brand.
+  if (!rows || !rows.length) {
+    try {
+      const one = await dGet(`/items/editions/${ED}?fields=${ED_FIELDS}`);
+      rows = one ? [one] : [];
+    } catch (e) {
+      rows = [];
+    }
+  }
+
   const published = (rows || []).filter((e) => !e.status || e.status === 'published');
   const today = todayISO();
   _edition =
