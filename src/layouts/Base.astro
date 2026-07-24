@@ -107,8 +107,9 @@ const appuntamenti = (await hasAppuntamenti()) ? 'si' : 'no';
     <button onclick="installApp()" data-it="Installa" data-en="Install">Installa</button>
   </div>
 
-  {/* Contenitore del contenuto: su desktop diventa la griglia a due colonne */}
-  <main class="contenuto">
+  {/* Contenitore del contenuto. Solo la HOME diventa la griglia a due colonne;
+      le altre pagine restano a colonna singola centrata. */}
+  <main class={"contenuto" + (active === 'home' ? ' contenuto--home' : '')}>
     <slot />
   </main>
 

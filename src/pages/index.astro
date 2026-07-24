@@ -81,6 +81,11 @@ function dateRange(ed) {
   return `${day(s)} – ${day(e)} ${monthYear(s)} · Visso`;
 }
 const range = dateRange(edition);
+
+// L'edizione "Perla dei Sibillini …" è il contenitore di servizio del sito (raccoglie
+// gli appuntamenti fuori da un evento vero): non va mostrata col suo nome. Un evento
+// vero (es. "Le Guaite del Gusto") sì. Riconosciuto dal titolo che è il nome del sito.
+const contenitore = /perla dei sibillini/i.test(edition?.title_it || '');
 ---
 <Base title="La Perla dei Sibillini" description="Visso e i Monti Sibillini: notizie, luoghi del gusto e iniziative del territorio." active="home">
   {/* L'identità del sito non cambia mai: Perla è la piattaforma della community
@@ -96,17 +101,31 @@ const range = dateRange(edition);
     </div>
   </section>
 
-  {/* IN EVIDENZA: l'evento in corso o in arrivo, finché c'è */}
+  {/* IN EVIDENZA. L'edizione "Perla dei Sibillini …" è un contenitore di servizio
+      (raccoglie gli appuntamenti fuori da un evento vero): NON va mostrata col suo
+      nome → invito generico ai prossimi appuntamenti. Un evento vero (es. Le Guaite
+      del Gusto) viene invece valorizzato per nome e date. */}
   {edition && (
     <section class="section evidenza con-appuntamenti">
       <div class="evidenza-box">
-        <div class="evidenza-kicker" data-it="In evidenza" data-en="Highlight">In evidenza</div>
-        <div class="evidenza-title serif">{edition.title_it}</div>
-        {range && <div class="evidenza-when">{range}</div>}
-        {edition.subtitle_it && (
-          <p class="evidenza-sub" data-it={edition.subtitle_it} data-en={edition.subtitle_en}>{edition.subtitle_it}</p>
+        {contenitore ? (
+          <>
+            <div class="evidenza-kicker" data-it="Programma" data-en="Programme">Programma</div>
+            <div class="evidenza-title serif" data-it="Prossimi appuntamenti a Visso" data-en="Upcoming events in Visso">Prossimi appuntamenti a Visso</div>
+            <p class="evidenza-sub" data-it="Eventi, sagre e iniziative del territorio, giorno per giorno." data-en="Local events, festivals and initiatives, day by day.">Eventi, sagre e iniziative del territorio, giorno per giorno.</p>
+            <a href="/programma" class="evidenza-cta" data-it="Scopri i prossimi appuntamenti →" data-en="See what's coming up →">Scopri i prossimi appuntamenti →</a>
+          </>
+        ) : (
+          <>
+            <div class="evidenza-kicker" data-it="In evidenza" data-en="Highlight">In evidenza</div>
+            <div class="evidenza-title serif">{edition.title_it}</div>
+            {range && <div class="evidenza-when">{range}</div>}
+            {edition.subtitle_it && (
+              <p class="evidenza-sub" data-it={edition.subtitle_it} data-en={edition.subtitle_en}>{edition.subtitle_it}</p>
+            )}
+            <a href="/programma" class="evidenza-cta" data-it="Scopri il programma →" data-en="See the programme →">Scopri il programma →</a>
+          </>
         )}
-        <a href="/programma" class="evidenza-cta" data-it="Scopri il programma →" data-en="See the programme →">Scopri il programma →</a>
       </div>
     </section>
   )}

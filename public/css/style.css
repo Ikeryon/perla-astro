@@ -1252,24 +1252,25 @@ a.book-btn span {
   .cta-row { display: none; }          /* la navigazione basta */
   .install-banner { display: none; }   /* l'installazione è cosa da telefono */
 
-  /* ── GRIGLIA: contenuto principale + rail ── */
-  .contenuto {
+  /* ── Pagine interne (programma, gusto, mappa, news): colonna singola centrata ── */
+  .contenuto { max-width: 760px; margin: 0 auto; padding: 0 40px; }
+
+  /* ── HOME: griglia a due colonne (contenuto principale + rail) ── */
+  .contenuto--home {
     max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 40px;
     display: grid;
     grid-template-columns: 2.5fr 1fr;
     column-gap: 36px;
     align-items: start;
   }
-  .contenuto > .hero { grid-column: 1 / -1; order: 0; padding-left: 0; padding-right: 0; }
-  .contenuto > .evidenza { grid-column: 1 / -1; order: 1; }
-  .news-home { grid-column: 1; order: 2; }
-  .rail      { grid-column: 2; order: 3; border-left: 1px solid var(--blush); padding-left: 28px; }
-  .tav-home  { grid-column: 1 / -1; order: 4; border-top: 3px double var(--blush); }
+  .contenuto--home > .hero { grid-column: 1 / -1; order: 0; padding-left: 0; padding-right: 0; }
+  .contenuto--home > .evidenza { grid-column: 1 / -1; order: 1; }
+  .contenuto--home .news-home { grid-column: 1; order: 2; }
+  .contenuto--home .rail      { grid-column: 2; order: 3; border-left: 1px solid var(--blush); padding-left: 28px; }
+  .contenuto--home .tav-home  { grid-column: 1 / -1; order: 4; border-top: 3px double var(--blush); }
 
-  .contenuto > section,
-  .rail > section { padding-left: 0; padding-right: 0; }
+  .contenuto--home > section,
+  .contenuto--home .rail > section { padding-left: 0; padding-right: 0; }
   .rail > section + section {
     margin-top: 26px;
     padding-top: 22px;
@@ -1330,3 +1331,9 @@ a.book-btn span {
 @media (min-width: 1180px) {
   .tav-home .tav-cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; }
 }
+
+/* descrizione iniziativa del programma (puo contenere HTML: p, br, strong) */
+.prog-desc { font-size: 14px; line-height: 1.6; color: var(--ink); opacity: 0.85; }
+.prog-desc p { margin: 0 0 0.6em; }
+.prog-desc p:last-child { margin-bottom: 0; }
+.prog-desc strong { color: var(--maroon); }

@@ -5,9 +5,15 @@ function setLang(lang) {
   currentLang = lang;
   localStorage.setItem('lang', lang);
 
-  // aggiorna tutti gli elementi con data-it / data-en
+  // aggiorna tutti gli elementi con data-it / data-en (testo semplice)
   document.querySelectorAll('[data-it]').forEach(el => {
     el.textContent = el.getAttribute('data-' + lang);
+  });
+
+  // elementi con contenuto ricco (HTML): data-it-html / data-en-html
+  document.querySelectorAll('[data-it-html]').forEach(el => {
+    const html = el.getAttribute('data-' + lang + '-html') || el.getAttribute('data-it-html');
+    if (html != null) el.innerHTML = html;
   });
 
   // aggiorna lo switch visivo
