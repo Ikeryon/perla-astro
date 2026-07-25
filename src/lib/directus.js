@@ -146,8 +146,8 @@ export function optimizeBodyImages(html, width = 1000) {
 // se Perla è tra i target_sites ("esce anche qui"). Filtro per slug del sito.
 const PERLA_SLUG = 'la-perla-dei-sibillini';
 
-export function getArticles() {
-  return dGet(
+export async function getArticles() {
+  const rows = await dGet(
     `/items/articles?filter[status][_eq]=published` +
     `&filter[_or][0][home_site][slug][_eq]=${PERLA_SLUG}` +
     `&filter[_or][1][target_sites][sites_id][slug][_eq]=${PERLA_SLUG}` +
@@ -157,6 +157,12 @@ export function getArticles() {
     `&fields=id,title_it,title_en,slug,abstract_it,abstract_en,date_created,publish_at,` +
     `cover_image,category.name_it,category.name_en`
   );
+  // Ordina per DATA EFFETTIVA = publish_at oppure, se manca, date_created.
+  // Il sort di Directus mette in fondo le news con publish_at nullo, così una
+  // news senza data di pubblicazione sprofondava (bug osservato su "Visso torna
+  // nel Medioevo"). Il fallback alla data di creazione la tiene al posto giusto.
+  return (rows || []).slice().sort((a, b) =>
+    new Date(b.publish_at || b.date_created) - new Date(a.publish_at || a.date_created));
 }
 
 export async function getArticle(slug) {
