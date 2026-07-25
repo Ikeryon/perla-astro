@@ -1337,3 +1337,24 @@ a.book-btn span {
 .prog-desc p { margin: 0 0 0.6em; }
 .prog-desc p:last-child { margin-bottom: 0; }
 .prog-desc strong { color: var(--maroon); }
+
+/* ── NEWS in HOME: card con copertina ── */
+.news-card { display: block; text-decoration: none; color: inherit; background: #fff;
+  border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(90,31,27,.08); }
+.news-cover { width: 100%; height: 200px; object-fit: cover; display: block; }
+.news-card-body { padding: 14px 16px; }
+.news-card-data { font-size: 12px; font-weight: 700; color: var(--gold);
+  text-transform: uppercase; letter-spacing: .03em; margin-bottom: 4px; }
+.news-card-titolo { font-size: 19px; color: var(--maroon); font-weight: 700; line-height: 1.2; }
+.news-card-testo { margin: 8px 0 0; color: #5b5b5b; font-size: 14px; line-height: 1.5; }
+.news-card-leggi { display: inline-block; margin-top: 10px; color: var(--maroon); font-weight: 700; font-size: 14px; }
+.news-mini-cover { width: 100%; height: 120px; object-fit: cover; border-radius: 8px;
+  display: block; margin-bottom: 8px; }
+
+@media (min-width: 1024px) {
+  .news-home .news-card { box-shadow: none; background: transparent; border-radius: 0; }
+  .news-home .news-card.has-cover .news-cover { height: 340px; border-radius: 6px; }
+  .news-home .news-card-body { padding: 14px 0 0; }
+  .news-home .news-card-titolo { font-size: 34px; line-height: 1.1; }
+  .news-home .news-card-testo { font-size: 16.5px; line-height: 1.6; max-width: 62ch; }
+}

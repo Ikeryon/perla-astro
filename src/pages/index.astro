@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getEdition, getProgramme, getCircuits, getArticles, getPlaces } from '../lib/directus.js';
+import { getEdition, getProgramme, getCircuits, getArticles, getPlaces, assetImg } from '../lib/directus.js';
 
 // LA TAVOLOZZA — intro editoriale della sezione gusto (contenuto stabile nel codice).
 const TAVOLOZZA_BOOKING_URL = 'https://tipicita.it/dettaglio_attivita.php?idAttivita=959';
@@ -212,16 +212,19 @@ const contenitore = /perla dei sibillini/i.test(edition?.title_it || '');
       <h2 class="serif"><span data-it="Dalle news" data-en="From the news">Dalle news</span></h2>
       <p class="section-sub" data-it="L'ultima notizia dal territorio" data-en="The latest news from the territory">L'ultima notizia dal territorio</p>
 
-      <a class="news-card" href={`/news/${latestNews.slug}`} style="display:block;text-decoration:none;color:inherit;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(90,31,27,.08)">
-        <div style="padding:14px 16px">
+      <a class={"news-card" + (latestNews.cover_image ? " has-cover" : "")} href={`/news/${latestNews.slug}`}>
+        {latestNews.cover_image && (
+          <img class="news-cover" src={assetImg(latestNews.cover_image, 1000)} alt="" loading="lazy" />
+        )}
+        <div class="news-card-body">
           {latestNews.date_created && (
-            <div style="font-size:12px;font-weight:700;color:#9a6b1f;text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px">{fmtDate(latestNews.date_created)}</div>
+            <div class="news-card-data">{fmtDate(latestNews.date_created)}</div>
           )}
-          <div class="serif" style="font-size:19px;color:#5A1F1B;font-weight:700;line-height:1.2" data-it={latestNews.title_it} data-en={latestNews.title_en || latestNews.title_it}>{latestNews.title_it}</div>
+          <div class="news-card-titolo serif" data-it={latestNews.title_it} data-en={latestNews.title_en || latestNews.title_it}>{latestNews.title_it}</div>
           {latestNews.abstract_it && (
-            <p style="margin:8px 0 0;color:#5b5b5b;font-size:14px;line-height:1.5" data-it={latestNews.abstract_it} data-en={latestNews.abstract_en || latestNews.abstract_it}>{latestNews.abstract_it}</p>
+            <p class="news-card-testo" data-it={latestNews.abstract_it} data-en={latestNews.abstract_en || latestNews.abstract_it}>{latestNews.abstract_it}</p>
           )}
-          <span style="display:inline-block;margin-top:10px;color:#5A1F1B;font-weight:700;font-size:14px" data-it="Leggi →" data-en="Read →">Leggi →</span>
+          <span class="news-card-leggi" data-it="Leggi →" data-en="Read →">Leggi →</span>
         </div>
       </a>
 
@@ -230,6 +233,9 @@ const contenitore = /perla dei sibillini/i.test(edition?.title_it || '');
         <div class="news-secondarie">
           {altreNews.map((a) => (
             <a class="news-mini" href={`/news/${a.slug}`}>
+              {a.cover_image && (
+                <img class="news-mini-cover" src={assetImg(a.cover_image, 600)} alt="" loading="lazy" />
+              )}
               {a.date_created && <div class="news-mini-data">{fmtDate(a.date_created)}</div>}
               <div class="news-mini-titolo serif" data-it={a.title_it} data-en={a.title_en || a.title_it}>{a.title_it}</div>
               {a.abstract_it && (
