@@ -10,6 +10,26 @@ const items = await getProgramme();
 const SOLD_OUT = ['esplora visso', 'bagno nei sibillini'];
 const isSoldOut = (it) => SOLD_OUT.some((s) => (it.title_it || '').toLowerCase().includes(s));
 
+// Il pulsante di prenotazione si adatta a cosa mette la redazione in booking_url:
+// - link wa.me / whatsapp  → "Scrivi su WhatsApp" (apre la chat)
+// - numero di telefono     → "Chiama" (apre il telefono, tel:)
+// - link a una pagina      → "Prenota" (come sempre, in scheda nuova)
+function bookingCta(url) {
+  const u = (url || '').trim();
+  if (!u) return null;
+  if (/(?:wa\.me|whatsapp)/i.test(u)) {
+    return { cls: 'wa', href: u.startsWith('http') ? u : `https://${u}`, ext: true,
+             icon: '💬', it: 'Scrivi su WhatsApp', en: 'Message on WhatsApp' };
+  }
+  const digits = u.replace(/^tel:/i, '').replace(/[\s().\-\/]/g, '');
+  if (/^\+?\d{6,}$/.test(digits)) {
+    return { cls: 'tel', href: `tel:${digits}`, ext: false,
+             icon: '📞', it: 'Chiama per prenotare', en: 'Call to book' };
+  }
+  return { cls: 'ext', href: u, ext: true, icon: '🎟️', it: 'Prenota', en: 'Book' };
+}
+items.forEach((it) => { it.booking_cta = bookingCta(it.booking_url); });
+
 // Dati strutturati (SEO): l'edizione come schema.org/Event
 const eventLd = edition && {
   '@context': 'https://schema.org',
@@ -58,10 +78,12 @@ const eventLd = edition && {
           {it.price_info && <span class="pill" style="font-size:12px;color:var(--maroon-soft);font-weight:700">{it.price_info}</span>}
           {isSoldOut(it) ? (
             <span class="book-btn soldout" style="margin:0" aria-disabled="true">SOLD OUT</span>
-          ) : (
-            it.booking_url && (
-              <a class="book-btn" href={it.booking_url} target="_blank" rel="noopener" style="margin:0">💬 <span data-it="Prenota" data-en="Book">Prenota</span></a>
-            )
+          ) : it.booking_cta && (
+            <a class={`book-btn ${it.booking_cta.cls}`} href={it.booking_cta.href} style="margin:0"
+               target={it.booking_cta.ext ? '_blank' : undefined}
+               rel={it.booking_cta.ext ? 'noopener' : undefined}>
+              {it.booking_cta.icon} <span data-it={it.booking_cta.it} data-en={it.booking_cta.en}>{it.booking_cta.it}</span>
+            </a>
           )}
         </div>
       </div>

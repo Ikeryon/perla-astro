@@ -906,6 +906,8 @@ body { padding-bottom: 80px; }
 
 .book-btn.tel { background: var(--maroon-soft); }
 .book-btn.ext { background: var(--maroon); }
+.book-btn.wa { background: #25D366; }
+.book-btn.wa span { color: #fff; }
 
 a.book-btn span {
   color: #fff;
