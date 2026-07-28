@@ -83,13 +83,13 @@ function luogoLabel(p) {
   if (!p || !p.name) return null;
   return p.city && p.city !== 'Visso' ? `${p.name} · ${p.city}` : p.name; // Visso è sottinteso
 }
-// UNA pastiglia di stato per la riga chiusa (§4)
+// UNA pastiglia per la riga chiusa: solo SOLD OUT o "Su prenotazione" (decisione Paolo).
+// "Ingresso libero" NON si mostra: spesso è un default quando manca l'info → fuorviante.
 function pastiglia(ini) {
   if (isSoldOut(ini)) return { cls: 'pill pill-sold', it: 'SOLD OUT', en: 'SOLD OUT' };
   const am = ini.access_mode;
-  if (am === 'free') return { cls: 'pill pill-free', it: 'Ingresso libero', en: 'Free entry' };
-  if (am === 'paid') return { cls: 'pill pill-paid', it: ini.price_info || 'A pagamento', en: ini.price_info || 'Paid' };
-  if (am === 'external_booking' || am === 'internal_booking') return { cls: 'pill pill-book', it: 'Su prenotazione', en: 'Booking required' };
+  const suPrenotazione = am === 'external_booking' || am === 'internal_booking' || (am === 'paid' && ini.booking_url);
+  if (suPrenotazione) return { cls: 'pill pill-book', it: 'Su prenotazione', en: 'Booking required' };
   return null;
 }
 // Il bottone della riga aperta secondo §4 — bookingCta() vince. null = nessun bottone.
@@ -107,7 +107,9 @@ function scadenzaLabel(dl) {
   };
 }
 function altreDate(ini, occCorr) {
-  const altre = (occByIni.get(ini.id) || []).filter((o) => o.id !== occCorr.id && o.date);
+  // solo occorrenze in GIORNI DIVERSI: quelle dello stesso giorno sono già righe lì accanto
+  const day = String(occCorr.date).slice(0, 10);
+  const altre = (occByIni.get(ini.id) || []).filter((o) => o.id !== occCorr.id && o.date && String(o.date).slice(0, 10) !== day);
   if (!altre.length) return null;
   const fmt = (o, lang) => giornoLabel(String(o.date).slice(0, 10))[lang] + (oraParti(o.start_time) ? ' ' + oraParti(o.start_time)[lang] : '');
   return { it: altre.map((o) => fmt(o, 'it')).join(', '), en: altre.map((o) => fmt(o, 'en')).join(', ') };
@@ -195,12 +197,13 @@ const eventLd = edition && {
                 </summary>
                 <div class="prog-corpo">
                   {ini.subtitle_it && <p class="prog-sub" data-it={ini.subtitle_it} data-en={ini.subtitle_en || ini.subtitle_it}>{ini.subtitle_it}</p>}
-                  {ini.abstract_it && <p class="prog-abstract" data-it={ini.abstract_it} data-en={ini.abstract_en || ini.abstract_it}>{ini.abstract_it}</p>}
-                  {ini.description_it && <div class="prog-desc" data-it-html={ini.description_it} data-en-html={ini.description_en || ini.description_it} set:html={ini.description_it}></div>}
+                  {ini.description_it
+                    ? <div class="prog-desc" data-it-html={ini.description_it} data-en-html={ini.description_en || ini.description_it} set:html={ini.description_it}></div>
+                    : ini.abstract_it && <p class="prog-abstract" data-it={ini.abstract_it} data-en={ini.abstract_en || ini.abstract_it}>{ini.abstract_it}</p>}
                   {occ.notes_it && <p class="prog-note" data-it={occ.notes_it} data-en={occ.notes_en || occ.notes_it}>{occ.notes_it}</p>}
                   {altre && <p class="prog-altre"><span data-it={`Si ripete anche: ${altre.it}`} data-en={`Also on: ${altre.en}`}>{`Si ripete anche: ${altre.it}`}</span></p>}
                   {dove && p?.google_maps_url && <a class="prog-maps" href={p.google_maps_url} target="_blank" rel="noopener"><span data-it={`📍 ${dove}`} data-en={`📍 ${dove}`}>{`📍 ${dove}`}</span></a>}
-                  {ini.booking_notes_it && <p class="prog-booknote" data-it={ini.booking_notes_it} data-en={ini.booking_notes_it}>{ini.booking_notes_it}</p>}
+                  {ini.price_info && <p class="prog-prezzo" data-it={ini.price_info} data-en={ini.price_info}>{ini.price_info}</p>}
                   {scad && <p class="prog-scadenza" data-it={scad.it} data-en={scad.en}>{scad.it}</p>}
                   {btn && (
                     <a class={`book-btn ${btn.cls}`} href={btn.href} data-deadline={ini.booking_deadline || undefined}
@@ -208,6 +211,7 @@ const eventLd = edition && {
                       {btn.icon} <span data-it={btn.it} data-en={btn.en}>{btn.it}</span>
                     </a>
                   )}
+                  {ini.booking_notes_it && <p class="prog-booknote" data-it={ini.booking_notes_it} data-en={ini.booking_notes_it}>{ini.booking_notes_it}</p>}
                 </div>
               </details>
             );
@@ -234,10 +238,11 @@ const eventLd = edition && {
               </summary>
               <div class="prog-corpo">
                 {ini.subtitle_it && <p class="prog-sub" data-it={ini.subtitle_it} data-en={ini.subtitle_en || ini.subtitle_it}>{ini.subtitle_it}</p>}
-                {ini.abstract_it && <p class="prog-abstract" data-it={ini.abstract_it} data-en={ini.abstract_en || ini.abstract_it}>{ini.abstract_it}</p>}
-                {ini.description_it && <div class="prog-desc" data-it-html={ini.description_it} data-en-html={ini.description_en || ini.description_it} set:html={ini.description_it}></div>}
+                {ini.description_it
+                  ? <div class="prog-desc" data-it-html={ini.description_it} data-en-html={ini.description_en || ini.description_it} set:html={ini.description_it}></div>
+                  : ini.abstract_it && <p class="prog-abstract" data-it={ini.abstract_it} data-en={ini.abstract_en || ini.abstract_it}>{ini.abstract_it}</p>}
                 {dove && ini.place?.google_maps_url && <a class="prog-maps" href={ini.place.google_maps_url} target="_blank" rel="noopener"><span data-it={`📍 ${dove}`} data-en={`📍 ${dove}`}>{`📍 ${dove}`}</span></a>}
-                {ini.booking_notes_it && <p class="prog-booknote" data-it={ini.booking_notes_it} data-en={ini.booking_notes_it}>{ini.booking_notes_it}</p>}
+                {ini.price_info && <p class="prog-prezzo" data-it={ini.price_info} data-en={ini.price_info}>{ini.price_info}</p>}
                 {scad && <p class="prog-scadenza" data-it={scad.it} data-en={scad.en}>{scad.it}</p>}
                 {btn && (
                   <a class={`book-btn ${btn.cls}`} href={btn.href} data-deadline={ini.booking_deadline || undefined}
@@ -245,6 +250,7 @@ const eventLd = edition && {
                     {btn.icon} <span data-it={btn.it} data-en={btn.en}>{btn.it}</span>
                   </a>
                 )}
+                {ini.booking_notes_it && <p class="prog-booknote" data-it={ini.booking_notes_it} data-en={ini.booking_notes_it}>{ini.booking_notes_it}</p>}
               </div>
             </details>
           );

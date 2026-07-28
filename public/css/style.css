@@ -1427,3 +1427,5 @@ a.book-btn span {
   .prog-tit { font-size: 16.5px; }
   .prog-giorno-tit { font-size: 22px; }
 }
+
+.prog-prezzo { font-size: 13.5px; font-weight: 700; color: var(--maroon-soft); }
