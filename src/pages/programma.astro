@@ -1,9 +1,10 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getEdition, getProgramme } from '../lib/directus.js';
+import { getEdition, getProgramme, getOccurrences } from '../lib/directus.js';
 
 const edition = await getEdition();
 const items = await getProgramme();
+const occs = await getOccurrences();
 
 // Iniziative esaurite: al posto di "Prenota" compare il bottone rosso SOLD OUT
 // (match sul titolo, gestione editoriale nel codice).
@@ -29,6 +30,41 @@ function bookingCta(url) {
   return { cls: 'ext', href: u, ext: true, icon: '🎟️', it: 'Prenota', en: 'Book' };
 }
 items.forEach((it) => { it.booking_cta = bookingCta(it.booking_url); });
+
+// ── PUNTO 2 — incrocio iniziative × occorrenze (in JS, non in Directus) ──
+// Le occorrenze sono le date reali. Un'iniziativa che si ripete compare in ogni
+// giorno in cui accade; quelle senza alcuna occorrenza sono "sempre disponibili".
+const byId = new Map(items.map((i) => [i.id, i]));
+const occByIni = new Map();
+for (const o of occs) {
+  const id = o.initiative?.id ?? o.initiative;
+  if (!occByIni.has(id)) occByIni.set(id, []);
+  occByIni.get(id).push(o);
+}
+const conta = (i) => occByIni.get(i.id)?.length ?? 0;
+
+const mappaGiorni = new Map();
+for (const o of occs) {
+  if (!o.date) continue;
+  const ini = byId.get(o.initiative?.id ?? o.initiative);
+  if (!ini) continue; // occorrenza di un'iniziativa fuori dal set pubblicato
+  const key = String(o.date).slice(0, 10);
+  if (!mappaGiorni.has(key)) mappaGiorni.set(key, []);
+  mappaGiorni.get(key).push({ occ: o, ini });
+}
+const giorni = [...mappaGiorni.entries()]
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([date, righe]) => ({ date, items: righe }));
+const sempre = items.filter((i) => conta(i) === 0);
+
+// ── STRUMENTAZIONE DI COLLAUDO (§7.1–7.2) — solo conteggi e titoli, niente dati
+//    personali, token o URL. DA RIMUOVERE prima del merge su main. ──
+console.log('[collaudo] iniziative:', items.length);
+console.log('[collaudo] occorrenze:', occs.length);
+console.log('[collaudo] access_mode presenti:', [...new Set(items.map((i) => i.access_mode))]);
+console.log('[collaudo] giorni:', giorni.length, giorni.map((g) => `${g.date}:${g.items.length}`).join(' '));
+console.log('[collaudo] sempre disponibili:', sempre.length);
+console.log('[collaudo] su piu giorni:', items.filter((i) => conta(i) > 1).map((i) => i.title_it));
 
 // Dati strutturati (SEO): l'edizione come schema.org/Event
 const eventLd = edition && {
