@@ -66,6 +66,19 @@ console.log('[collaudo] giorni:', giorni.length, giorni.map((g) => `${g.date}:${
 console.log('[collaudo] sempre disponibili:', sempre.length);
 console.log('[collaudo] su piu giorni:', items.filter((i) => conta(i) > 1).map((i) => i.title_it));
 
+// Riepilogo di collaudo mostrato in pagina (branch di anteprima) — solo conteggi e
+// titoli. DA RIMUOVERE con i console.log prima del merge su main.
+const collaudo = {
+  edizione: edition ? `[${edition.id}] ${edition.title_it}` : '—',
+  iniziative: items.length,
+  occorrenze: occs.length,
+  access_mode: [...new Set(items.map((i) => i.access_mode ?? 'null'))].join(', '),
+  giorni: giorni.map((g) => `${g.date}:${g.items.length}`).join('  '),
+  n_giorni: giorni.length,
+  sempre_disponibili: `${sempre.length} — ${sempre.map((i) => i.title_it).join(' · ') || '—'}`,
+  su_piu_giorni: items.filter((i) => conta(i) > 1).map((i) => `${i.title_it} ×${conta(i)}`).join(' · ') || 'nessuna',
+};
+
 // Dati strutturati (SEO): l'edizione come schema.org/Event
 const eventLd = edition && {
   '@context': 'https://schema.org',
@@ -92,6 +105,16 @@ const eventLd = edition && {
     <h1 class="serif"><span data-it="Il" data-en="The">Il</span> <em data-it="programma" data-en="programme">programma</em></h1>
     <p class="section-sub" data-it={edition?.subtitle_it} data-en={edition?.subtitle_en}>{edition?.subtitle_it}</p>
   </div>
+
+  {/* ⚠️ COLLAUDO — blocco temporaneo, da rimuovere prima del merge su main */}
+  <pre style="margin:12px 20px;padding:14px;background:#2a1a17;color:#ffe;border-radius:10px;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-x:auto">🔧 COLLAUDO §7.1–7.2 (solo su questo branch){"\n"}
+edizione:            {collaudo.edizione}{"\n"}
+iniziative:          {collaudo.iniziative}{"\n"}
+occorrenze:          {collaudo.occorrenze}{"\n"}
+access_mode:         {collaudo.access_mode}{"\n"}
+giorni ({collaudo.n_giorni}):          {collaudo.giorni}{"\n"}
+sempre disponibili:  {collaudo.sempre_disponibili}{"\n"}
+su più giorni:       {collaudo.su_piu_giorni}</pre>
 
   {/* Fuori stagione la voce sparisce dal menù, ma la pagina resta raggiungibile
       (vecchi link, motori di ricerca): meglio un messaggio che un vicolo cieco. */}
