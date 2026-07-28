@@ -57,28 +57,85 @@ const giorni = [...mappaGiorni.entries()]
   .map(([date, righe]) => ({ date, items: righe }));
 const sempre = items.filter((i) => conta(i) === 0);
 
-// ── STRUMENTAZIONE DI COLLAUDO (§7.1–7.2) — solo conteggi e titoli, niente dati
-//    personali, token o URL. DA RIMUOVERE prima del merge su main. ──
-console.log('[collaudo] iniziative:', items.length);
-console.log('[collaudo] occorrenze:', occs.length);
-console.log('[collaudo] access_mode presenti:', [...new Set(items.map((i) => i.access_mode))]);
-console.log('[collaudo] giorni:', giorni.length, giorni.map((g) => `${g.date}:${g.items.length}`).join(' '));
-console.log('[collaudo] sempre disponibili:', sempre.length);
-console.log('[collaudo] su piu giorni:', items.filter((i) => conta(i) > 1).map((i) => i.title_it));
+// ── Helper di formato (calcolati al build) ──
+function oraParti(t) {
+  if (!t) return null;
+  const [hh, mm = '00'] = String(t).split(':');
+  const h = parseInt(hh, 10);
+  const h12 = ((h + 11) % 12) + 1;
+  return { it: `${String(h).padStart(2, '0')}:${mm}`, en: `${h12}:${mm} ${h < 12 ? 'am' : 'pm'}` };
+}
+function oraLabel(occ) {
+  const s = oraParti(occ?.start_time);
+  if (!s) return { it: 'tutto il giorno', en: 'all day' };
+  const e = oraParti(occ?.end_time);
+  return e ? { it: `${s.it}–${e.it}`, en: `${s.en}–${e.en}` } : s;
+}
+function giornoLabel(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00'); // mezzogiorno: evita lo scarto di fuso
+  return {
+    it: d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }),
+    en: d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }),
+  };
+}
+const luogoDi = (occ, ini) => (occ && occ.place) || (ini && ini.place) || null; // l'occorrenza vince
+function luogoLabel(p) {
+  if (!p || !p.name) return null;
+  return p.city && p.city !== 'Visso' ? `${p.name} · ${p.city}` : p.name; // Visso è sottinteso
+}
+// UNA pastiglia di stato per la riga chiusa (§4)
+function pastiglia(ini) {
+  if (isSoldOut(ini)) return { cls: 'pill pill-sold', it: 'SOLD OUT', en: 'SOLD OUT' };
+  const am = ini.access_mode;
+  if (am === 'free') return { cls: 'pill pill-free', it: 'Ingresso libero', en: 'Free entry' };
+  if (am === 'paid') return { cls: 'pill pill-paid', it: ini.price_info || 'A pagamento', en: ini.price_info || 'Paid' };
+  if (am === 'external_booking' || am === 'internal_booking') return { cls: 'pill pill-book', it: 'Su prenotazione', en: 'Booking required' };
+  return null;
+}
+// Il bottone della riga aperta secondo §4 — bookingCta() vince. null = nessun bottone.
+function bottone(ini) {
+  if (ini.access_mode === 'free' || isSoldOut(ini)) return null;
+  if (ini.access_mode === 'internal_booking' && !ini.booking_url) return null;
+  return ini.booking_cta; // = bookingCta(booking_url), null se vuoto
+}
+function scadenzaLabel(dl) {
+  const d = dl ? new Date(dl) : null;
+  if (!d || isNaN(d)) return null;
+  return {
+    it: 'Prenotazioni entro ' + d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' }),
+    en: 'Bookings close on ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }),
+  };
+}
+function altreDate(ini, occCorr) {
+  const altre = (occByIni.get(ini.id) || []).filter((o) => o.id !== occCorr.id && o.date);
+  if (!altre.length) return null;
+  const fmt = (o, lang) => giornoLabel(String(o.date).slice(0, 10))[lang] + (oraParti(o.start_time) ? ' ' + oraParti(o.start_time)[lang] : '');
+  return { it: altre.map((o) => fmt(o, 'it')).join(', '), en: altre.map((o) => fmt(o, 'en')).join(', ') };
+}
 
-// Riepilogo di collaudo: UNA sola stringa, stampata dentro il <pre>. DA RIMUOVERE
-// con i console.log prima del merge su main.
-const collaudoText = [
-  '🔧 COLLAUDO §7.1-7.2 (solo su questo branch)',
-  '',
-  'edizione:            ' + (edition ? `[${edition.id}] ${edition.title_it}` : '—'),
-  'iniziative:          ' + items.length,
-  'occorrenze:          ' + occs.length,
-  'access_mode:         ' + [...new Set(items.map((i) => i.access_mode ?? 'null'))].join(', '),
-  'giorni (' + giorni.length + '):          ' + (giorni.map((g) => `${g.date}:${g.items.length}`).join('  ') || '—'),
-  'sempre disponibili:  ' + sempre.length + ' — ' + (sempre.map((i) => i.title_it).join(' · ') || '—'),
-  'su piu giorni:       ' + (items.filter((i) => conta(i) > 1).map((i) => `${i.title_it} x${conta(i)}`).join(' · ') || 'nessuna'),
-].join('\n');
+// ── SEO: un schema.org/Event per ogni appuntamento (occorrenza) ──
+const occEvents = occs.map((o) => {
+  const ini = byId.get(o.initiative?.id ?? o.initiative);
+  if (!ini) return null;
+  const p = luogoDi(o, ini);
+  const day = String(o.date).slice(0, 10);
+  const ev = {
+    '@context': 'https://schema.org', '@type': 'Event',
+    name: ini.title_it,
+    startDate: o.start_time ? `${day}T${String(o.start_time).slice(0, 8)}` : day,
+    eventStatus: 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    location: {
+      '@type': 'Place', name: (p && p.name) || 'Visso',
+      address: { '@type': 'PostalAddress', addressLocality: (p && p.city) || 'Visso', addressRegion: 'Marche', addressCountry: 'IT' },
+    },
+    url: new URL('/programma', Astro.site).href,
+  };
+  if (o.end_time) ev.endDate = `${day}T${String(o.end_time).slice(0, 8)}`;
+  if (ini.access_mode === 'free') ev.offers = { '@type': 'Offer', price: '0', priceCurrency: 'EUR' };
+  else if (ini.booking_url) ev.offers = { '@type': 'Offer', url: ini.booking_url };
+  return ev;
+}).filter(Boolean);
 
 // Dati strutturati (SEO): l'edizione come schema.org/Event
 const eventLd = edition && {
@@ -101,45 +158,117 @@ const eventLd = edition && {
 ---
 <Base title="Programma — Le Guaite del Gusto" description="Il programma completo di Le Guaite del Gusto a Visso." active="programma">
   {eventLd && <script type="application/ld+json" set:html={JSON.stringify(eventLd)} />}
+  {occEvents.map((e) => <script type="application/ld+json" set:html={JSON.stringify(e)} />)}
   <div class="page-header">
     <a href="/" class="back-link" data-it="← Home" data-en="← Home">← Home</a>
     <h1 class="serif"><span data-it="Il" data-en="The">Il</span> <em data-it="programma" data-en="programme">programma</em></h1>
     <p class="section-sub" data-it={edition?.subtitle_it} data-en={edition?.subtitle_en}>{edition?.subtitle_it}</p>
   </div>
 
-  {/* ⚠️ COLLAUDO — blocco temporaneo, da rimuovere prima del merge su main */}
-  <pre style="margin:12px 20px;padding:14px;background:#2a1a17;color:#ffe;border-radius:10px;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-x:auto">{collaudoText}</pre>
-
-  {/* Fuori stagione la voce sparisce dal menù, ma la pagina resta raggiungibile
-      (vecchi link, motori di ricerca): meglio un messaggio che un vicolo cieco. */}
+  {/* Fuori stagione (o quando lo script rileva che i giorni sono tutti passati) */}
   <section class="section senza-appuntamenti" style="padding-top: 8px;">
     <div class="callout" data-it="Al momento non ci sono appuntamenti in programma. Torna presto: il calendario si riempie a ogni nuova iniziativa del territorio." data-en="There are no scheduled events at the moment. Come back soon: the calendar fills up with every new local initiative.">Al momento non ci sono appuntamenti in programma. Torna presto: il calendario si riempie a ogni nuova iniziativa del territorio.</div>
     <a href="/news" class="see-all" data-it="Intanto leggi le news →" data-en="Meanwhile, read the news →">Intanto leggi le news →</a>
   </section>
 
-  <section class="section con-appuntamenti" style="padding-top: 8px;">
-    {items.map((it) => (
-      <div class="day-card">
-        {it.abstract_it && (
-          <div class="day-label" data-it={it.abstract_it} data-en={it.abstract_en}>{it.abstract_it}</div>
-        )}
-        <div class="day-title serif" data-it={it.title_it} data-en={it.title_en}>{it.title_it}</div>
-        {it.description_it && (
-          <div class="prog-desc" style="margin-top:8px" data-it-html={it.description_it} data-en-html={it.description_en || it.description_it} set:html={it.description_it}></div>
-        )}
-        <div class="foot-row" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px">
-          {it.price_info && <span class="pill" style="font-size:12px;color:var(--maroon-soft);font-weight:700">{it.price_info}</span>}
-          {isSoldOut(it) ? (
-            <span class="book-btn soldout" style="margin:0" aria-disabled="true">SOLD OUT</span>
-          ) : it.booking_cta && (
-            <a class={`book-btn ${it.booking_cta.cls}`} href={it.booking_cta.href} style="margin:0"
-               target={it.booking_cta.ext ? '_blank' : undefined}
-               rel={it.booking_cta.ext ? 'noopener' : undefined}>
-              {it.booking_cta.icon} <span data-it={it.booking_cta.it} data-en={it.booking_cta.en}>{it.booking_cta.it}</span>
-            </a>
-          )}
+  <section class="section con-appuntamenti prog-cal" style="padding-top: 8px;">
+    {giorni.map((g) => {
+      const gl = giornoLabel(g.date);
+      return (
+        <div class="prog-giorno" data-date={g.date}>
+          <h2 class="prog-giorno-tit serif"><span data-it={gl.it} data-en={gl.en}>{gl.it}</span></h2>
+          {g.items.map(({ occ, ini }) => {
+            const ora = oraLabel(occ);
+            const p = luogoDi(occ, ini);
+            const dove = luogoLabel(p);
+            const pill = pastiglia(ini);
+            const btn = bottone(ini);
+            const altre = altreDate(ini, occ);
+            const scad = scadenzaLabel(ini.booking_deadline);
+            return (
+              <details class="prog-item">
+                <summary>
+                  <span class="prog-ora" data-it={ora.it} data-en={ora.en}>{ora.it}</span>
+                  <span class="prog-tit" data-it={ini.title_it} data-en={ini.title_en || ini.title_it}>{ini.title_it}</span>
+                  {dove && <span class="prog-dove" data-it={dove} data-en={dove}>{dove}</span>}
+                  {pill && <span class={pill.cls} data-it={pill.it} data-en={pill.en}>{pill.it}</span>}
+                </summary>
+                <div class="prog-corpo">
+                  {ini.subtitle_it && <p class="prog-sub" data-it={ini.subtitle_it} data-en={ini.subtitle_en || ini.subtitle_it}>{ini.subtitle_it}</p>}
+                  {ini.abstract_it && <p class="prog-abstract" data-it={ini.abstract_it} data-en={ini.abstract_en || ini.abstract_it}>{ini.abstract_it}</p>}
+                  {ini.description_it && <div class="prog-desc" data-it-html={ini.description_it} data-en-html={ini.description_en || ini.description_it} set:html={ini.description_it}></div>}
+                  {occ.notes_it && <p class="prog-note" data-it={occ.notes_it} data-en={occ.notes_en || occ.notes_it}>{occ.notes_it}</p>}
+                  {altre && <p class="prog-altre"><span data-it={`Si ripete anche: ${altre.it}`} data-en={`Also on: ${altre.en}`}>{`Si ripete anche: ${altre.it}`}</span></p>}
+                  {dove && p?.google_maps_url && <a class="prog-maps" href={p.google_maps_url} target="_blank" rel="noopener"><span data-it={`📍 ${dove}`} data-en={`📍 ${dove}`}>{`📍 ${dove}`}</span></a>}
+                  {ini.booking_notes_it && <p class="prog-booknote" data-it={ini.booking_notes_it} data-en={ini.booking_notes_it}>{ini.booking_notes_it}</p>}
+                  {scad && <p class="prog-scadenza" data-it={scad.it} data-en={scad.en}>{scad.it}</p>}
+                  {btn && (
+                    <a class={`book-btn ${btn.cls}`} href={btn.href} data-deadline={ini.booking_deadline || undefined}
+                       target={btn.ext ? '_blank' : undefined} rel={btn.ext ? 'noopener' : undefined}>
+                      {btn.icon} <span data-it={btn.it} data-en={btn.en}>{btn.it}</span>
+                    </a>
+                  )}
+                </div>
+              </details>
+            );
+          })}
         </div>
+      );
+    })}
+
+    {sempre.length > 0 && (
+      <div class="prog-giorno prog-sempre">
+        <h2 class="prog-giorno-tit serif"><span data-it="Sempre disponibili" data-en="Always on">Sempre disponibili</span></h2>
+        {sempre.map((ini) => {
+          const dove = luogoLabel(ini.place);
+          const pill = pastiglia(ini);
+          const btn = bottone(ini);
+          const scad = scadenzaLabel(ini.booking_deadline);
+          return (
+            <details class="prog-item">
+              <summary>
+                <span class="prog-ora" data-it="sempre" data-en="always">sempre</span>
+                <span class="prog-tit" data-it={ini.title_it} data-en={ini.title_en || ini.title_it}>{ini.title_it}</span>
+                {dove && <span class="prog-dove" data-it={dove} data-en={dove}>{dove}</span>}
+                {pill && <span class={pill.cls} data-it={pill.it} data-en={pill.en}>{pill.it}</span>}
+              </summary>
+              <div class="prog-corpo">
+                {ini.subtitle_it && <p class="prog-sub" data-it={ini.subtitle_it} data-en={ini.subtitle_en || ini.subtitle_it}>{ini.subtitle_it}</p>}
+                {ini.abstract_it && <p class="prog-abstract" data-it={ini.abstract_it} data-en={ini.abstract_en || ini.abstract_it}>{ini.abstract_it}</p>}
+                {ini.description_it && <div class="prog-desc" data-it-html={ini.description_it} data-en-html={ini.description_en || ini.description_it} set:html={ini.description_it}></div>}
+                {dove && ini.place?.google_maps_url && <a class="prog-maps" href={ini.place.google_maps_url} target="_blank" rel="noopener"><span data-it={`📍 ${dove}`} data-en={`📍 ${dove}`}>{`📍 ${dove}`}</span></a>}
+                {ini.booking_notes_it && <p class="prog-booknote" data-it={ini.booking_notes_it} data-en={ini.booking_notes_it}>{ini.booking_notes_it}</p>}
+                {scad && <p class="prog-scadenza" data-it={scad.it} data-en={scad.en}>{scad.it}</p>}
+                {btn && (
+                  <a class={`book-btn ${btn.cls}`} href={btn.href} data-deadline={ini.booking_deadline || undefined}
+                     target={btn.ext ? '_blank' : undefined} rel={btn.ext ? 'noopener' : undefined}>
+                    {btn.icon} <span data-it={btn.it} data-en={btn.en}>{btn.it}</span>
+                  </a>
+                )}
+              </div>
+            </details>
+          );
+        })}
       </div>
-    ))}
+    )}
   </section>
+
+  {/* §3.5 — giorni passati e scadenze si calcolano AL CARICAMENTO (sito statico). */}
+  <script is:inline>
+    (function () {
+      var oggi = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+      var futuri = 0;
+      document.querySelectorAll('.prog-giorno[data-date]').forEach(function (g) {
+        if (g.dataset.date < oggi) g.classList.add('is-past');
+        else futuri++;
+      });
+      var haSempre = !!document.querySelector('.prog-sempre');
+      if (futuri === 0 && !haSempre) document.documentElement.dataset.appuntamenti = 'no';
+      var now = Date.now();
+      document.querySelectorAll('.book-btn[data-deadline]').forEach(function (b) {
+        var dl = Date.parse(b.getAttribute('data-deadline'));
+        if (!isNaN(dl) && dl < now) { b.classList.add('disabled'); b.setAttribute('aria-disabled', 'true'); b.removeAttribute('href'); }
+      });
+    })();
+  </script>
 </Base>

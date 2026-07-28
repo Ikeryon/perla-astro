@@ -1,6 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getEdition, getProgramme, getCircuits, getArticles, getPlaces, assetImg } from '../lib/directus.js';
+import { getEdition, getProgramme, getOccurrences, getCircuits, getArticles, getPlaces, assetImg } from '../lib/directus.js';
 
 // LA TAVOLOZZA — intro editoriale della sezione gusto (contenuto stabile nel codice).
 const TAVOLOZZA_BOOKING_URL = 'https://tipicita.it/dettaglio_attivita.php?idAttivita=959';
@@ -52,7 +52,33 @@ const TAVOLOZZA = [
 const edition = await getEdition();
 const programme = await getProgramme();
 const circuits = await getCircuits();
-const preview = programme.slice(0, 3);
+
+// §3.7 — anteprima ordinata per DATA del prossimo appuntamento (non più per sort),
+// con data + orario al posto dell'abstract. Le date stanno nelle occurrences.
+const occs = await getOccurrences();
+const oggiISO = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+const occByIni = new Map();
+for (const o of occs) {
+  const id = o.initiative?.id ?? o.initiative;
+  if (!occByIni.has(id)) occByIni.set(id, []);
+  occByIni.get(id).push(o);
+}
+function prossima(id) {
+  const list = (occByIni.get(id) || []).filter((o) => o.date)
+    .sort((a, b) => (a.date + (a.start_time || '')).localeCompare(b.date + (b.start_time || '')));
+  const next = list.find((o) => String(o.date).slice(0, 10) >= oggiISO);
+  if (!next) return null;
+  const d = new Date(String(next.date).slice(0, 10) + 'T12:00:00');
+  const t = next.start_time ? String(next.start_time).slice(0, 5) : null;
+  const it = d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'long' });
+  const en = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long' });
+  return { key: String(next.date).slice(0, 10) + (next.start_time || ''), it: t ? `${it} · ${t}` : it, en: t ? `${en} · ${t}` : en };
+}
+const preview = programme
+  .map((it) => ({ it, when: prossima(it.id) }))
+  .filter((x) => x.when)
+  .sort((a, b) => a.when.key.localeCompare(b.when.key))
+  .slice(0, 3);
 
 // news: la prima è l'apertura, le successive due riempiono la riga (solo desktop)
 const articles = await getArticles();
@@ -145,10 +171,10 @@ const contenitore = /perla dei sibillini/i.test(edition?.title_it || '');
         <h2 class="serif"><span data-it="Il programma" data-en="The programme">Il programma</span></h2>
         <p class="section-sub" data-it="Alcuni appuntamenti da vivere" data-en="A few highlights to experience">Alcuni appuntamenti da vivere</p>
 
-        {preview.map((it) => (
+        {preview.map(({ it, when }) => (
           <div class="day-card">
-            {it.abstract_it && <div class="day-label" data-it={it.abstract_it} data-en={it.abstract_en}>{it.abstract_it}</div>}
-            <div class="day-title serif" data-it={it.title_it} data-en={it.title_en}>{it.title_it}</div>
+            <div class="day-label" data-it={when.it} data-en={when.en}>{when.it}</div>
+            <div class="day-title serif" data-it={it.title_it} data-en={it.title_en || it.title_it}>{it.title_it}</div>
           </div>
         ))}
 
