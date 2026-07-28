@@ -1360,3 +1360,72 @@ a.book-btn span {
   .news-home .news-card-titolo { font-size: 34px; line-height: 1.1; }
   .news-home .news-card-testo { font-size: 16.5px; line-height: 1.6; max-width: 62ch; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   PROGRAMMA — calendario ad accordion (<details>). Mobile first.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* pastiglie di stato (una per riga) */
+.pill {
+  font-size: 11px; font-weight: 700; letter-spacing: .02em;
+  padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+  background: var(--blush-soft); color: var(--maroon);
+}
+.pill-free { background: #e7f2ea; color: #1f7a43; }
+.pill-paid { background: var(--cream-deep); color: var(--maroon-soft); }
+.pill-book { background: var(--blush-soft); color: var(--maroon); }
+.pill-sold { background: #c62828; color: #fff; }
+
+/* giorno */
+.prog-giorno { margin-top: 26px; }
+.prog-giorno.is-past { display: none; }
+.prog-giorno-tit {
+  font-size: 19px; color: var(--maroon); font-weight: 700;
+  text-transform: capitalize; margin: 0 0 6px;
+  padding-bottom: 8px; border-bottom: 2px solid var(--blush);
+}
+
+/* riga = <details> */
+.prog-item { border-bottom: 1px solid var(--blush-soft); }
+.prog-item > summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 13px 4px; min-height: 44px; box-sizing: border-box;
+}
+.prog-item > summary::-webkit-details-marker { display: none; }
+.prog-item > summary:focus-visible { outline: 2px solid var(--maroon); outline-offset: 2px; border-radius: 6px; }
+.prog-ora {
+  flex: 0 0 auto; min-width: 88px;
+  font-size: 13px; font-weight: 700; color: var(--maroon-soft);
+  font-variant-numeric: tabular-nums;
+}
+.prog-tit { flex: 1 1 auto; font-size: 15.5px; font-weight: 600; color: var(--maroon); line-height: 1.25; }
+.prog-dove { flex: 0 0 auto; font-size: 12px; color: var(--ink); opacity: .6; }
+.prog-item > summary .pill { flex: 0 0 auto; align-self: center; }
+/* freccetta discreta a destra */
+.prog-item > summary::after {
+  content: '⌄'; flex: 0 0 auto; align-self: center;
+  color: var(--maroon-soft); font-size: 16px; line-height: 1;
+  transition: transform .15s ease;
+}
+.prog-item[open] > summary::after { transform: rotate(180deg); }
+
+/* corpo aperto */
+.prog-corpo { padding: 2px 4px 16px 4px; }
+.prog-corpo > * + * { margin-top: 10px; }
+.prog-sub { font-size: 15px; font-weight: 600; color: var(--maroon-soft); }
+.prog-abstract { font-size: 14px; line-height: 1.55; color: var(--ink); opacity: .9; }
+.prog-altre { font-size: 12.5px; color: var(--maroon-soft); font-weight: 600; }
+.prog-note { font-size: 13.5px; line-height: 1.5; opacity: .85; }
+.prog-maps { display: inline-block; font-size: 13px; font-weight: 700; color: var(--maroon); text-decoration: none; }
+.prog-booknote { font-size: 13px; line-height: 1.5; opacity: .85; }
+.prog-scadenza { font-size: 12.5px; font-weight: 700; color: var(--maroon-soft); }
+.prog-corpo .book-btn { margin-top: 12px; }
+
+/* desktop: la colonna resta stretta e leggibile (già .contenuto a 760px) */
+@media (min-width: 1024px) {
+  .prog-tit { font-size: 16.5px; }
+  .prog-giorno-tit { font-size: 22px; }
+}
+
+.prog-prezzo { font-size: 13.5px; font-weight: 700; color: var(--maroon-soft); }
