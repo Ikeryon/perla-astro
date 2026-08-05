@@ -1,0 +1,53 @@
+---
+/* MetaPixel.astro — pixel Meta UNICO di tutto il progetto Anigami: 2852415708396585.
+   Mai crearne altri: e' il pixel condiviso che costruisce il pubblico di retargeting
+   cross-sito (anigami.it, evo.ooo, perla, ...).
+
+   REGOLA: non parte mai prima del consenso. Qui NON si aggiunge un secondo banner:
+   ci si aggancia al Consent Mode v2 + CookieYes gia' presenti su questo sito.
+   Il pixel si carica solo quando `ad_storage` passa a `granted`.
+
+   POSIZIONE: nel <head>, DOPO il blocco `gtag('consent','default',...)` e PRIMA del
+   tag CookieYes, cosi' il wrapper su dataLayer.push e' installato prima che la CMP
+   possa spingere il primo consent update. */
+---
+<script is:inline>
+  (function () {
+    var PIXEL_ID = '2852415708396585';
+    var caricato = false;
+
+    function caricaPixel() {
+      if (caricato) return;
+      caricato = true;
+      !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+      (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', PIXEL_ID);
+      fbq('track', 'PageView');
+    }
+
+    /* 1) consenso gia' dato in una visita precedente: CookieYes lo ricorda nel cookie */
+    try { if (/advertisement:yes/.test(document.cookie)) caricaPixel(); } catch (e) {}
+
+    /* 2) Consent Mode v2: intercetta gtag('consent','update',{ad_storage:'granted'}).
+          Funziona con qualsiasi CMP che parli Consent Mode, non solo CookieYes. */
+    window.dataLayer = window.dataLayer || [];
+    var pushOriginale = window.dataLayer.push;
+    window.dataLayer.push = function () {
+      var r = pushOriginale.apply(this, arguments);
+      try {
+        var a = arguments[0];
+        if (a && a[0] === 'consent' && a[1] === 'update' && a[2] && a[2].ad_storage === 'granted') caricaPixel();
+      } catch (e) {}
+      return r;
+    };
+
+    /* 3) rete di sicurezza: evento nativo CookieYes (se GCM fosse disattivato) */
+    document.addEventListener('cookieyes_consent_update', function (e) {
+      var d = e && e.detail;
+      if (d && (d.accepted || []).indexOf('advertisement') > -1) caricaPixel();
+    });
+  })();
+</script>

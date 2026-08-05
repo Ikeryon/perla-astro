@@ -1,5 +1,6 @@
 ---
 import Newsletter from '../components/Newsletter.astro';
+import MetaPixel from '../components/MetaPixel.astro';
 import { getEdition, hasAppuntamenti } from '../lib/directus.js';
 import IconHome from '../components/icons/IconHome.astro';
 import IconProgramma from '../components/icons/IconProgramma.astro';
@@ -40,6 +41,11 @@ const appuntamenti = (await hasAppuntamenti()) ? 'si' : 'no';
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#5A1F1B" />
 
+  <!-- Verifica del dominio in Meta Business (Sicurezza del brand -> Domini): serve
+       all'attribuzione delle conversioni post-iOS. Deve stare nel <head> statico:
+       Meta non lo trova se lo inserisce JavaScript. Non rimuovere. -->
+  <meta name="facebook-domain-verification" content="24l4uqvx58gb0uvzapsb4bf7odp461" />
+
   <!-- Google Consent Mode v2 — default: DENIED (GDPR). Deve stare PRIMA di CookieYes e GA. -->
   <script is:inline>
     window.dataLayer = window.dataLayer || [];
@@ -57,6 +63,8 @@ const appuntamenti = (await hasAppuntamenti()) ? 'si' : 'no';
     gtag('set', 'ads_data_redaction', true);
     gtag('set', 'url_passthrough', true);
   </script>
+
+  <MetaPixel />
 
   <!-- CookieYes — banner consensi. Con "Support GCM" attivo aggiorna da solo il Consent Mode. -->
   <script is:inline id="cookieyes" type="text/javascript"
