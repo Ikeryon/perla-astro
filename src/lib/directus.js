@@ -85,15 +85,35 @@ export async function hasAppuntamenti() {
   return Boolean(end) && String(end).slice(0, 10) >= todayISO();
 }
 
-// Iniziative del PROGRAMMA (senza circuito) — gli appuntamenti "a orario"
+// Iniziative del PROGRAMMA (senza circuito) — gli appuntamenti "a orario".
+// La usa anche la home: NON rinominarla. Le date/orari stanno nelle occurrences
+// (vedi getOccurrences): qui si chiedono i dati dell'iniziativa, l'incrocio si fa in JS.
 export async function getProgramme() {
   const ed = await getEdition();
   if (!ed) return [];
   return dGet(
     `/items/initiatives?filter[edition][_eq]=${ed.id}` +
     `&filter[circuit][_null]=true&filter[status][_eq]=published&sort=sort` +
-    `&fields=id,title_it,title_en,abstract_it,abstract_en,description_it,description_en,` +
-    `price_info,booking_url,is_featured`
+    `&fields=id,slug,title_it,title_en,subtitle_it,subtitle_en,` +
+    `abstract_it,abstract_en,description_it,description_en,` +
+    `access_mode,price_info,booking_url,booking_deadline,booking_notes_it,is_featured,` +
+    `place.id,place.name,place.city,place.google_maps_url`
+  );
+}
+
+// OCCORRENZE del programma — le date/orari reali (collezione a sé, M2O verso initiative).
+// Si parte dalle occorrenze (non dalle iniziative): stesso schema che lo Studio usa in prod.
+// occurrences.place, se presente, ha la precedenza su initiative.place.
+export async function getOccurrences() {
+  const ed = await getEdition();
+  if (!ed) return [];
+  return dGet(
+    `/items/occurrences?filter[initiative][edition][_eq]=${ed.id}` +
+    `&filter[initiative][circuit][_null]=true` +
+    `&filter[initiative][status][_eq]=published` +
+    `&sort=date,start_time&limit=-1` +
+    `&fields=id,date,start_time,end_time,notes_it,notes_en,` +
+    `initiative.id,place.id,place.name,place.city,place.google_maps_url`
   );
 }
 
